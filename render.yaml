@@ -24,7 +24,7 @@ services:
         sync: false
       - key: QUEUE_CONNECTION
         value: database
-    buildCommand: "composer install --no-interaction --no-dev --prefer-dist --optimize-autoloader && php artisan key:generate && php artisan migrate --force && php artisan config:cache && php artisan route:cache && php artisan view:cache"
+    buildCommand: "composer install --no-interaction --no-dev --prefer-dist --optimize-autoloader && php artisan key:generate && php artisan migrate --force && php artisan l5-swagger:generate && php artisan config:cache && php artisan route:cache && php artisan view:cache"
     startCommand: "php artisan serve --host=0.0.0.0 --port=$PORT"
 
   - type: pserv
