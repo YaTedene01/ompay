@@ -96,7 +96,12 @@ class AuthController extends Controller
 
     dispatch(new SendAuthLinkJob($link));
 
-        return $this->success(null, 'Lien de connexion envoyé si le numéro existe.');
+        $data = null;
+        $message = 'Lien de connexion envoyé si le numéro existe.';
+        if (env('APP_DEBUG')) {
+            $data = ['debug_token' => $token];
+        }
+        return $this->success($data, $message);
     }
 
     /**
