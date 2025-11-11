@@ -10,10 +10,25 @@ services:
       - key: APP_DEBUG
         value: 'false'
       - key: APP_KEY
-        fromService: null
+        generateValue: true
       - key: DATABASE_URL
-        fromService: null
-      - key: RAILWAY_STATIC_URL
-        fromService: null
-    buildCommand: null
-    startCommand: null
+        fromService:
+          type: pserv
+          name: ompay-db
+          property: connectionString
+      - key: TWILIO_SID
+        sync: false
+      - key: TWILIO_TOKEN
+        sync: false
+      - key: TWILIO_FROM
+        sync: false
+      - key: QUEUE_CONNECTION
+        value: database
+    buildCommand: "composer install --no-interaction --no-dev --prefer-dist --optimize-autoloader && php artisan key:generate && php artisan config:cache && php artisan route:cache && php artisan view:cache"
+    startCommand: "php artisan serve --host=0.0.0.0 --port=$PORT"
+
+  - type: pserv
+    name: ompay-db
+    env: postgres
+    plan: free
+    ipAllowList: []
