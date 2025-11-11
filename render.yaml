@@ -8,14 +8,13 @@ services:
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
-        value: 'true'
+        value: 'false'
       - key: APP_KEY
         generateValue: true
       - key: DATABASE_URL
-        fromService:
-          type: pserv
-          name: ompay-db
-          property: connectionString
+        value: postgresql://postgres:elrXyZCpDHcWiwkKEvuVyfFEdSyQlBFJ@switchyard.proxy.rlwy.net:55205/railway?sslmode=require
+      - key: DB_CONNECTION
+        value: pgsql
       - key: TWILIO_SID
         sync: false
       - key: TWILIO_TOKEN
