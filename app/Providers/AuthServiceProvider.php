@@ -21,6 +21,6 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Passport routes are registered by the package's service provider automatically.
     }
 }

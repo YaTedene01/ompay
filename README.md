@@ -25,6 +25,51 @@ Laravel is accessible, powerful, and provides tools required for large, robust a
 
 Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
 
+## API - Endpoints essentiels (ompay)
+
+Auth
+
+-- POST /api/auth/envoyer-lien
+	- Body: { phone: string, redirect_url?: string }
+	- Description: génère un lien à usage unique et envoie un SMS (job queue). Le lien redirige vers le front avec un temp_token.
+
+-- POST /api/auth/echange
+	- Body: { temp_token: string }
+	- Description: échange le token temporaire pour un access_token Passport. Retourne { access_token, token_type, user }.
+
+Compte
+
+- GET /api/compte (auth:api)
+	- Retourne le compte de l'utilisateur et le solde.
+
+
+- POST /api/compte/depot (auth:api)
+	- Body: { montant }
+	- Description: effectue un dépôt (création de transaction et augmentation du solde).
+
+
+- POST /api/compte/retrait (auth:api)
+	- Body: { montant }
+	- Description: effectue un retrait si le solde est suffisant.
+
+Transactions
+
+- GET /api/transactions (auth:api)
+	- Query: ?page=1&per_page=15&type=transfer
+	- Description: liste les transactions du compte.
+
+QR
+
+- POST /api/qr/generate (auth:api)
+	- Body: { meta?: object }
+	- Description: génère un QR unique lié à l'utilisateur (stocké en base).
+
+Notes
+
+- Les tokens Passport sont utilisés pour l'authentification (driver `auth:api`).
+- Les jobs d'envoi de SMS sont mis en file (voir `App\Jobs\SendAuthLinkJob`).
+- Pour la production, configurez un provider SMS réel et mettez en place une file (Redis, database queue, etc.).
+
 You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
 
 If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
@@ -64,37 +109,3 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-
-## Quick start
-
-A minimal set of commands to run this Laravel 10 app locally:
-
-1. Install PHP dependencies (if needed):
-
-```
-cd /home/ya-tedene/ompay
-composer install
-```
-
-2. Ensure `.env` exists (it was copied during scaffolding). If not:
-
-```
-cp .env.example .env
-```
-
-3. Generate the application key (should already be set):
-
-```
-php artisan key:generate
-```
-
-4. Run the dev server:
-
-```
-php artisan serve --host=127.0.0.1 --port=8000
-```
-
-Open http://127.0.0.1:8000 in your browser.
-
-Alternative: use Laravel Sail (Docker) for a containerized setup (see https://laravel.com/docs/10.x/sail).
-# ompay

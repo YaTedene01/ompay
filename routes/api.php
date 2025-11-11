@@ -14,6 +14,17 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\TransactionController;
+use App\Http\Controllers\Api\QrController;
+
+Route::post('auth/envoyer-lien', [AuthController::class, 'sendLink']);
+Route::post('auth/echange', [AuthController::class, 'echange']);
+
+Route::middleware('auth:api')->group(function () {
+    Route::get('user', function (Request $request) { return $request->user(); });
+    Route::get('compte', [\App\Http\Controllers\Api\CompteController::class, 'show']);
+    Route::post('compte/transfert', [\App\Http\Controllers\Api\CompteController::class, 'transfert']);
+    Route::get('transactions', [TransactionController::class, 'index']);
+    Route::post('qr/payer', [QrController::class, 'payer']);
 });

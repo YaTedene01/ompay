@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: ompay-web
+    env: docker
+    plan: free
+    dockerfilePath: Dockerfile
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: 'false'
+      - key: APP_KEY
+        fromService: null
+      - key: DATABASE_URL
+        fromService: null
+      - key: RAILWAY_STATIC_URL
+        fromService: null
+    buildCommand: null
+    startCommand: null
