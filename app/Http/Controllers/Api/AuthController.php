@@ -20,8 +20,8 @@ use Illuminate\Support\Carbon;
  * )
  *
  * @OA\Server(
- *     url="http://localhost:8000",
- *     description="Environnement local"
+ *     url="https://ompay-wex1.onrender.com",
+ *     description="Production"
  * )
  *
  * @OA\SecurityScheme(
