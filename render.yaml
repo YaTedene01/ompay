@@ -22,7 +22,7 @@ services:
       - key: TWILIO_FROM
         sync: false
       - key: QUEUE_CONNECTION
-        value: database
+        value: sync
       - key: L5_SWAGGER_BASE_PATH
         value: https://ompay-web.onrender.com
     buildCommand: "composer install --no-interaction --no-dev --prefer-dist --optimize-autoloader && php artisan key:generate && php artisan migrate --force && php artisan l5-swagger:generate && php artisan config:cache && php artisan route:cache && php artisan view:cache"
