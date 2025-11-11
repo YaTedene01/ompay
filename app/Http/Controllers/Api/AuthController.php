@@ -179,8 +179,10 @@ class AuthController extends Controller
         $user->save();
 
         // Ensure compte exists (anciennement portefeuille)
+        $user->load('compte');
         if (! $user->compte) {
             $user->compte()->create(['solde' => 0]);
+            $user->load('compte');
         }
 
         $link->used_at = Carbon::now();
