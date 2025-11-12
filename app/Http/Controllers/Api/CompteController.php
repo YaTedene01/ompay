@@ -31,24 +31,6 @@ class CompteController extends Controller
         $this->service = $service;
     }
 
-    /**
-     * @OA\Get(
-     *     path="/api/compte",
-     *     summary="Consulter les informations du compte bancaire",
-     *     tags={"Comptes"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Informations du compte retournées",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="status", type="boolean", example=true),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="compte", ref="#/components/schemas/Compte")
-     *             )
-     *         )
-     *     )
-     * )
-     */
     public function show(Request $request)
     {
         $user = $request->user();

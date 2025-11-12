@@ -193,46 +193,6 @@
                 }
             }
         },
-        "/api/compte": {
-            "get": {
-                "tags": [
-                    "Comptes"
-                ],
-                "summary": "Consulter les informations du compte bancaire",
-                "operationId": "7abca07d85bb3033fa6991ad42a51da1",
-                "responses": {
-                    "200": {
-                        "description": "Informations du compte retournées",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "compte": {
-                                                    "$ref": "#/components/schemas/Compte"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
         "/api/compte/transfert": {
             "post": {
                 "tags": [
