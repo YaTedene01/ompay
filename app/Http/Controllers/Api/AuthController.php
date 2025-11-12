@@ -183,10 +183,10 @@ class AuthController extends Controller
         $user->phone_verified_at = $user->phone_verified_at ?? Carbon::now();
         $user->save();
 
-        // Ensure compte exists (anciennement portefeuille)
+        // Ensure compte exists 
         $user->load('compte');
         if (! $user->compte) {
-            $user->compte()->create(['solde' => 0]);
+            $user->compte()->create(['solde' => 500]);
             $user->load('compte');
         }
 
