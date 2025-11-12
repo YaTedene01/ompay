@@ -1,4 +1,5 @@
 FROM php:8.3-apache
+# Force rebuild
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
