@@ -25,6 +25,11 @@ class Compte extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class, 'compte_id');
+    }
+
     public function getSoldeAttribute($value)
     {
         return $value ?? 0;
