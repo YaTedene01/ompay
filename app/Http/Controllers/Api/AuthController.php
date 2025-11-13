@@ -59,7 +59,6 @@ class AuthController extends Controller
      *         required=true,
      *         @OA\JsonContent(
      *             @OA\Property(property="phone", type="string", example="771234567"),
-     *             @OA\Property(property="redirect_url", type="string", format="url", example="http://localhost:3000")
      *         )
      *     ),
      *     @OA\Response(

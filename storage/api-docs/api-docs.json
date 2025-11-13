@@ -28,11 +28,6 @@
                                     "phone": {
                                         "type": "string",
                                         "example": "771234567"
-                                    },
-                                    "redirect_url": {
-                                        "type": "string",
-                                        "format": "url",
-                                        "example": "http://localhost:3000"
                                     }
                                 },
                                 "type": "object"
