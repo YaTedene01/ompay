@@ -77,8 +77,14 @@ class TransactionController extends Controller
 
         $page = $q->paginate($perPage);
 
-        return $this->success(['data' => $page->items(), 'meta' => [
-            'total' => $page->total(), 'per_page' => $page->perPage(), 'current_page' => $page->currentPage(),
-        ]]);
+        return response()->json([
+            'status' => true,
+            'data' => $page->items(),
+            'meta' => [
+                'total' => $page->total(),
+                'per_page' => $page->perPage(),
+                'current_page' => $page->currentPage(),
+            ],
+        ]);
     }
 }
