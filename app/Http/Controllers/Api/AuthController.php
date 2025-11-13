@@ -81,7 +81,6 @@ class AuthController extends Controller
     {
         $data = $request->validate([
             'phone' => ['required', 'string'],
-            'redirect_url' => ['nullable', 'url'],
         ]);
 
         $token = Str::random(48);
@@ -90,7 +89,7 @@ class AuthController extends Controller
         $link = AuthLink::create([
             'phone' => $data['phone'],
             'token' => $token,
-            'data' => ['redirect' => $data['redirect_url'] ?? env('APP_URL')],
+            'data' => ['redirect' => env('APP_URL')],
             'expires_at' => $expires,
         ]);
 
