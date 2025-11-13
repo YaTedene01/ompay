@@ -134,7 +134,7 @@ class CompteService
             $this->repo->updateBalance($fromCompte, $fromCompte->solde - $montant);
             $this->repo->updateBalance($toCompte, $toCompte->solde + $montant);
 
-            return ['from' => $fromCompte->fresh(), 'to' => $toCompte->fresh(), 'tx_debit' => $txDebit, 'tx_credit' => $txCredit];
+            return ['from' => $fromCompte->fresh(), 'to' => $toCompte->fresh(), 'debit_transaction' => $txDebit, 'credit_transaction' => $txCredit];
         });
     }
 
