@@ -168,7 +168,13 @@ class CompteController extends Controller
         try {
             $montant = (float) $data['montant'];
             $result = $this->service->payerParQr($user, $qr, $montant);
-            return $this->success($result, 'Paiement effectué');
+
+            // Ne retourner que les informations de l'expéditeur
+            return $this->success([
+                'from' => $result['from'],
+                'montant' => $montant,
+                'type' => 'paiement_qr'
+            ], 'Paiement effectué');
         } catch (\Throwable $e) {
             return $this->error($e->getMessage(), 400);
         }
@@ -438,7 +444,13 @@ class CompteController extends Controller
             if (! empty($data['to_compte_id'])) $to['compte_id'] = $data['to_compte_id'];
 
             $result = $this->service->transfert($user, $to, (float) $data['montant']);
-            return $this->success($result, 'Transfert effectué');
+
+            // Ne retourner que les informations de l'expéditeur
+            return $this->success([
+                'from' => $result['from'],
+                'montant' => (float) $data['montant'],
+                'type' => 'transfert'
+            ], 'Transfert effectué');
         } catch (\Throwable $e) {
             return $this->error($e->getMessage(), 400);
         }
