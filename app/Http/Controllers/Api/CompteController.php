@@ -253,9 +253,67 @@ class CompteController extends Controller
 
         $page = $q->paginate($perPage);
 
+        // Formater les données des transactions
+        $formattedTransactions = collect($page->items())->map(function ($transaction) {
+            $data = [
+                'id' => $transaction->id,
+                'reference' => $transaction->id, // Utiliser l'ID comme référence
+                'type' => $transaction->type,
+                'montant' => $transaction->montant,
+                'date' => $transaction->created_at->toISOString(),
+                'status' => $transaction->status,
+            ];
+
+            // Déterminer l'expéditeur et le destinataire selon le type de transaction
+            switch ($transaction->type) {
+                case 'transfert_debit':
+                    $data['expediteur'] = 'Vous';
+                    $data['destinataire'] = $this->getUserInfoByAccountId($transaction->counterparty);
+                    $data['description'] = 'Transfert envoyé';
+                    break;
+
+                case 'transfert_credit':
+                    $data['expediteur'] = $this->getUserInfoByAccountId($transaction->counterparty);
+                    $data['destinataire'] = 'Vous';
+                    $data['description'] = 'Transfert reçu';
+                    break;
+
+                case 'paiement_debit':
+                    $data['expediteur'] = 'Vous';
+                    $data['destinataire'] = $this->getUserInfoByAccountId($transaction->counterparty);
+                    $data['description'] = 'Paiement QR';
+                    break;
+
+                case 'paiement_credit':
+                    $data['expediteur'] = $this->getUserInfoByAccountId($transaction->counterparty);
+                    $data['destinataire'] = 'Vous';
+                    $data['description'] = 'Paiement QR reçu';
+                    break;
+
+                case 'depot':
+                    $data['expediteur'] = 'Système';
+                    $data['destinataire'] = 'Vous';
+                    $data['description'] = 'Dépôt';
+                    break;
+
+                case 'retrait':
+                    $data['expediteur'] = 'Vous';
+                    $data['destinataire'] = 'Système';
+                    $data['description'] = 'Retrait';
+                    break;
+
+                default:
+                    $data['expediteur'] = 'Inconnu';
+                    $data['destinataire'] = 'Inconnu';
+                    $data['description'] = ucfirst(str_replace('_', ' ', $transaction->type));
+            }
+
+            return $data;
+        });
+
         return response()->json([
             'status' => true,
-            'data' => $page->items(),
+            'data' => $formattedTransactions,
             'meta' => [
                 'total' => $page->total(),
                 'per_page' => $page->perPage(),
@@ -384,5 +442,17 @@ class CompteController extends Controller
         } catch (\Throwable $e) {
             return $this->error($e->getMessage(), 400);
         }
+    }
+
+    /**
+     * Helper method to get user info by account ID
+     */
+    private function getUserInfoByAccountId(string $accountId): string
+    {
+        $compte = $this->service->repo->find($accountId);
+        if ($compte && $compte->user) {
+            return $compte->user->name . ' (' . $compte->user->phone . ')';
+        }
+        return 'Utilisateur inconnu';
     }
 }
