@@ -37,7 +37,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Token généré pour les tests",
+                        "description": "Lien envoyé",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -46,30 +46,9 @@
                                             "type": "boolean",
                                             "example": true
                                         },
-                                        "data": {
-                                            "properties": {
-                                                "token": {
-                                                    "type": "string",
-                                                    "example": "abc123def456..."
-                                                },
-                                                "link": {
-                                                    "type": "string",
-                                                    "example": "https://ompay-wex1.onrender.com/auth/verify?temp_token=abc123..."
-                                                },
-                                                "expires_in": {
-                                                    "type": "integer",
-                                                    "example": 600
-                                                },
-                                                "message": {
-                                                    "type": "string",
-                                                    "example": "Utilisez ce token pour vous connecter"
-                                                }
-                                            },
-                                            "type": "object"
-                                        },
                                         "message": {
                                             "type": "string",
-                                            "example": "Token généré pour les tests."
+                                            "example": "Lien de connexion envoyé si le numéro existe."
                                         }
                                     },
                                     "type": "object"
