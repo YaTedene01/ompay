@@ -62,17 +62,10 @@ class CompteController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/compte/{numeroCompte}/solde",
-     *     summary="Consulter le solde d'un compte",
+     *     path="/api/compte/solde",
+     *     summary="Consulter le solde de mon compte",
      *     tags={"Comptes"},
      *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(
-     *         name="numeroCompte",
-     *         in="path",
-     *         required=true,
-     *         @OA\Schema(type="string", format="uuid"),
-     *         description="Numéro du compte (UUID)"
-     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Solde du compte",
@@ -85,33 +78,13 @@ class CompteController extends Controller
      *                 @OA\Property(property="dernier_maj", type="string", format="date-time")
      *             )
      *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Compte introuvable",
-     *         @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
-     *     ),
-     *     @OA\Response(
-     *         response=403,
-     *         description="Accès non autorisé à ce compte",
-     *         @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
      *     )
      * )
      */
-    public function solde(Request $request, string $numeroCompte)
+    public function solde(Request $request)
     {
         $user = $request->user();
-
-        // Vérifier que l'utilisateur a accès à ce compte
-        $compte = $this->service->repo->find($numeroCompte);
-        if (!$compte) {
-            return $this->error('Compte introuvable', 404);
-        }
-
-        // Vérifier que c'est bien le compte de l'utilisateur connecté
-        if ($compte->user_id !== $user->id) {
-            return $this->error('Accès non autorisé à ce compte', 403);
-        }
+        $compte = $this->service->getOrCreateForUser($user);
 
         return $this->success([
             'compte_id' => $compte->id,
@@ -182,17 +155,10 @@ class CompteController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/compte/{numeroCompte}/transactions",
-     *     summary="Lister les transactions d'un compte",
+     *     path="/api/compte/transactions",
+     *     summary="Lister les transactions de mon compte",
      *     tags={"Comptes"},
      *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(
-     *         name="numeroCompte",
-     *         in="path",
-     *         required=true,
-     *         @OA\Schema(type="string", format="uuid"),
-     *         description="Numéro du compte (UUID)"
-     *     ),
      *     @OA\Parameter(
      *         name="per_page",
      *         in="query",
@@ -217,33 +183,13 @@ class CompteController extends Controller
      *                 @OA\Property(property="current_page", type="integer")
      *             )
      *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Compte introuvable",
-     *         @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
-     *     ),
-     *     @OA\Response(
-     *         response=403,
-     *         description="Accès non autorisé à ce compte",
-     *         @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
      *     )
      * )
      */
-    public function transactions(Request $request, string $numeroCompte)
+    public function transactions(Request $request)
     {
         $user = $request->user();
-
-        // Vérifier que l'utilisateur a accès à ce compte
-        $compte = $this->service->repo->find($numeroCompte);
-        if (!$compte) {
-            return $this->error('Compte introuvable', 404);
-        }
-
-        // Vérifier que c'est bien le compte de l'utilisateur connecté
-        if ($compte->user_id !== $user->id) {
-            return $this->error('Accès non autorisé à ce compte', 403);
-        }
+        $compte = $this->service->getOrCreateForUser($user);
 
         $perPage = (int) $request->query('per_page', 15);
         $q = \App\Models\Transaction::where('compte_id', $compte->id)

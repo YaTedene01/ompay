@@ -180,25 +180,13 @@
                 }
             }
         },
-        "/api/compte/{numeroCompte}/solde": {
+        "/api/compte/solde": {
             "get": {
                 "tags": [
                     "Comptes"
                 ],
-                "summary": "Consulter le solde d'un compte",
-                "operationId": "4c2744b8d5678225b41335db6f8931fa",
-                "parameters": [
-                    {
-                        "name": "numeroCompte",
-                        "in": "path",
-                        "description": "Numéro du compte (UUID)",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
+                "summary": "Consulter le solde de mon compte",
+                "operationId": "64fe5833ca07fbfe690231757453de90",
                 "responses": {
                     "200": {
                         "description": "Solde du compte",
@@ -233,26 +221,6 @@
                                         }
                                     },
                                     "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Compte introuvable",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Accès non autorisé à ce compte",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
                                 }
                             }
                         }
@@ -334,24 +302,14 @@
                 ]
             }
         },
-        "/api/compte/{numeroCompte}/transactions": {
+        "/api/compte/transactions": {
             "get": {
                 "tags": [
                     "Comptes"
                 ],
-                "summary": "Lister les transactions d'un compte",
-                "operationId": "1416c42d290f2a676049a0e702b5466d",
+                "summary": "Lister les transactions de mon compte",
+                "operationId": "cee45d0031a4b5b2a3a1b8d1b3c2bc26",
                 "parameters": [
-                    {
-                        "name": "numeroCompte",
-                        "in": "path",
-                        "description": "Numéro du compte (UUID)",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    },
                     {
                         "name": "per_page",
                         "in": "query",
@@ -413,26 +371,6 @@
                                         }
                                     },
                                     "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Compte introuvable",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Accès non autorisé à ce compte",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
                                 }
                             }
                         }
