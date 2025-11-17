@@ -40,6 +40,67 @@ class CompteController extends Controller
 
     /**
      * @OA\Get(
+     *     path="/api/compte/{numeroCompte}/solde",
+     *     summary="Consulter le solde d'un compte",
+     *     tags={"Comptes"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="numeroCompte",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="string", format="uuid"),
+     *         description="Numéro du compte (UUID)"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Solde du compte",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="compte_id", type="string", example="uuid-here"),
+     *                 @OA\Property(property="solde", type="number", example=150.50),
+     *                 @OA\Property(property="devise", type="string", example="XOF"),
+     *                 @OA\Property(property="dernier_maj", type="string", format="date-time")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Compte introuvable",
+     *         @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Accès non autorisé à ce compte",
+     *         @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+     *     )
+     * )
+     */
+    public function solde(Request $request, string $numeroCompte)
+    {
+        $user = $request->user();
+
+        // Vérifier que l'utilisateur a accès à ce compte
+        $compte = $this->service->repo->find($numeroCompte);
+        if (!$compte) {
+            return $this->error('Compte introuvable', 404);
+        }
+
+        // Vérifier que c'est bien le compte de l'utilisateur connecté
+        if ($compte->user_id !== $user->id) {
+            return $this->error('Accès non autorisé à ce compte', 403);
+        }
+
+        return $this->success([
+            'compte_id' => $compte->id,
+            'solde' => $compte->solde,
+            'devise' => $compte->devise,
+            'dernier_maj' => $compte->updated_at
+        ]);
+    }
+
+    /**
+     * @OA\Get(
      *     path="/api/compte/dashboard",
      *     summary="Obtenir le tableau de bord du compte utilisateur",
      *     tags={"Comptes"},
@@ -90,7 +151,7 @@ class CompteController extends Controller
 
         // Get recent transactions
         $transactions = $user->compte->transactions()
-            ->whereIn('type', ['transfert', 'paiement'])
+            ->whereIn('type', ['transfert_debit', 'transfert_credit', 'transfert', 'paiement', 'depot', 'retrait'])
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();

@@ -13,9 +13,10 @@ use Illuminate\Http\Request;
  *     type="object",
  *     @OA\Property(property="id", type="string", format="uuid"),
  *     @OA\Property(property="compte_id", type="string", format="uuid"),
- *     @OA\Property(property="type", type="string", enum={"transfert", "paiement"}, example="transfert"),
+ *     @OA\Property(property="type", type="string", enum={"transfert_debit", "transfert_credit", "transfert", "paiement", "depot", "retrait"}, example="transfert_debit"),
  *     @OA\Property(property="montant", type="number", format="float"),
  *     @OA\Property(property="status", type="string", example="completed"),
+ *     @OA\Property(property="counterparty", type="string", format="uuid", description="ID du compte contrepartie pour les transferts"),
  *     @OA\Property(property="created_at", type="string", format="date-time")
  * )
  */
@@ -38,7 +39,7 @@ class TransactionController extends Controller
      *     @OA\Parameter(
      *         name="type",
      *         in="query",
-     *         @OA\Schema(type="string", enum={"transfert", "paiement"}),
+     *         @OA\Schema(type="string", enum={"transfert_debit", "transfert_credit", "transfert", "paiement", "depot", "retrait"}),
      *         description="Filtrer par type de transaction"
      *     ),
      *     @OA\Response(
@@ -66,11 +67,12 @@ class TransactionController extends Controller
 
         $perPage = (int) $request->query('per_page', 15);
         $q = Transaction::where('compte_id', $compte->id)
-            ->whereIn('type', ['transfert', 'paiement'])
+            ->whereIn('type', ['transfert_debit', 'transfert_credit', 'transfert', 'paiement', 'depot', 'retrait'])
             ->orderBy('created_at', 'desc');
 
         if ($type = $request->query('type')) {
-            if (in_array($type, ['transfert', 'paiement'])) {
+            $allowedTypes = ['transfert_debit', 'transfert_credit', 'transfert', 'paiement', 'depot', 'retrait'];
+            if (in_array($type, $allowedTypes)) {
                 $q->where('type', $type);
             }
         }

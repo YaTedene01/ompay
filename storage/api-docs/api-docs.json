@@ -180,6 +180,91 @@
                 }
             }
         },
+        "/api/compte/{numeroCompte}/solde": {
+            "get": {
+                "tags": [
+                    "Comptes"
+                ],
+                "summary": "Consulter le solde d'un compte",
+                "operationId": "4c2744b8d5678225b41335db6f8931fa",
+                "parameters": [
+                    {
+                        "name": "numeroCompte",
+                        "in": "path",
+                        "description": "Numéro du compte (UUID)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Solde du compte",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "compte_id": {
+                                                    "type": "string",
+                                                    "example": "uuid-here"
+                                                },
+                                                "solde": {
+                                                    "type": "number",
+                                                    "example": 150.5
+                                                },
+                                                "devise": {
+                                                    "type": "string",
+                                                    "example": "XOF"
+                                                },
+                                                "dernier_maj": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Compte introuvable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Accès non autorisé à ce compte",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/compte/dashboard": {
             "get": {
                 "tags": [
@@ -413,8 +498,12 @@
                         "schema": {
                             "type": "string",
                             "enum": [
+                                "transfert_debit",
+                                "transfert_credit",
                                 "transfert",
-                                "paiement"
+                                "paiement",
+                                "depot",
+                                "retrait"
                             ]
                         }
                     }
@@ -552,10 +641,14 @@
                     "type": {
                         "type": "string",
                         "enum": [
+                            "transfert_debit",
+                            "transfert_credit",
                             "transfert",
-                            "paiement"
+                            "paiement",
+                            "depot",
+                            "retrait"
                         ],
-                        "example": "transfert"
+                        "example": "transfert_debit"
                     },
                     "montant": {
                         "type": "number",
@@ -564,6 +657,11 @@
                     "status": {
                         "type": "string",
                         "example": "completed"
+                    },
+                    "counterparty": {
+                        "description": "ID du compte contrepartie pour les transferts",
+                        "type": "string",
+                        "format": "uuid"
                     },
                     "created_at": {
                         "type": "string",
