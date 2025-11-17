@@ -334,14 +334,24 @@
                 ]
             }
         },
-        "/api/compte/transactions": {
+        "/api/compte/{numeroCompte}/transactions": {
             "get": {
                 "tags": [
                     "Comptes"
                 ],
-                "summary": "Lister les transactions de l'utilisateur",
-                "operationId": "cee45d0031a4b5b2a3a1b8d1b3c2bc26",
+                "summary": "Lister les transactions d'un compte",
+                "operationId": "1416c42d290f2a676049a0e702b5466d",
                 "parameters": [
+                    {
+                        "name": "numeroCompte",
+                        "in": "path",
+                        "description": "Numéro du compte (UUID)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
                     {
                         "name": "per_page",
                         "in": "query",
@@ -403,6 +413,26 @@
                                         }
                                     },
                                     "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Compte introuvable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Accès non autorisé à ce compte",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
                                 }
                             }
                         }

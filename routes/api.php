@@ -27,5 +27,5 @@ Route::middleware('auth:api')->group(function () {
     Route::get('compte/{numeroCompte}/solde', [\App\Http\Controllers\Api\CompteController::class, 'solde']);
     Route::post('compte/paiement', [\App\Http\Controllers\Api\CompteController::class, 'paiement']);
     Route::post('compte/transfert', [\App\Http\Controllers\Api\CompteController::class, 'transfert']);
-    Route::get('compte/transactions', [\App\Http\Controllers\Api\CompteController::class, 'transactions']);
+    Route::get('compte/{numeroCompte}/transactions', [\App\Http\Controllers\Api\CompteController::class, 'transactions']);
 });
