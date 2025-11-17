@@ -180,32 +180,6 @@
                 }
             }
         },
-        "/api/compte": {
-            "get": {
-                "tags": [
-                    "Comptes"
-                ],
-                "summary": "Informations de base du compte",
-                "operationId": "7abca07d85bb3033fa6991ad42a51da1",
-                "responses": {
-                    "200": {
-                        "description": "Informations du compte",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Compte"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
         "/api/compte/solde": {
             "get": {
                 "tags": [
