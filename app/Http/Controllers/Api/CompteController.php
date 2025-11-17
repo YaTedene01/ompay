@@ -100,6 +100,125 @@ class CompteController extends Controller
     }
 
     /**
+     * @OA\Post(
+     *     path="/api/compte/paiement",
+     *     summary="Effectuer un paiement à l'aide d'un code marchand",
+     *     tags={"Comptes"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"code_marchand"},
+     *             @OA\Property(property="code_marchand", type="string", example="ABC123"),
+     *             @OA\Property(property="montant", type="number", example=50.00)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Paiement effectué",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Paiement effectué")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Erreur de paiement",
+     *         @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+     *     )
+     * )
+     */
+    public function paiement(Request $request)
+    {
+        $data = $request->validate([
+            'code_marchand' => ['required', 'string'],
+            'montant' => ['required', 'numeric', 'min:0.01'],
+        ]);
+
+        $user = $request->user();
+
+        // Chercher le QR code par code_marchand dans les métadonnées
+        $qr = \App\Models\QrCode::whereJsonContains('meta->code_marchand', $data['code_marchand'])->first();
+        if (! $qr) {
+            return $this->error('Code marchand invalide', 404);
+        }
+
+        try {
+            $montant = (float) $data['montant'];
+            $result = $this->service->payerParQr($user, $qr, $montant);
+            return $this->success($result, 'Paiement effectué');
+        } catch (\Throwable $e) {
+            return $this->error($e->getMessage(), 400);
+        }
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/compte/transactions",
+     *     summary="Lister les transactions de l'utilisateur",
+     *     tags={"Comptes"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         @OA\Schema(type="integer", default=15),
+     *         description="Nombre d'éléments par page"
+     *     ),
+     *     @OA\Parameter(
+     *         name="type",
+     *         in="query",
+     *         @OA\Schema(type="string", enum={"transfert_debit", "transfert_credit", "transfert", "paiement_debit", "paiement_credit", "paiement", "depot", "retrait"}),
+     *         description="Filtrer par type de transaction"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste des transactions",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Transaction")),
+     *             @OA\Property(property="meta", type="object",
+     *                 @OA\Property(property="total", type="integer"),
+     *                 @OA\Property(property="per_page", type="integer"),
+     *                 @OA\Property(property="current_page", type="integer")
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function transactions(Request $request)
+    {
+        $user = $request->user();
+        $compte = $user->compte;
+        if (! $compte) {
+            return $this->success(['data' => [], 'meta' => ['total' => 0]]);
+        }
+
+        $perPage = (int) $request->query('per_page', 15);
+        $q = \App\Models\Transaction::where('compte_id', $compte->id)
+            ->whereIn('type', ['transfert_debit', 'transfert_credit', 'transfert', 'paiement_debit', 'paiement_credit', 'paiement', 'depot', 'retrait'])
+            ->orderBy('created_at', 'desc');
+
+        if ($type = $request->query('type')) {
+            $allowedTypes = ['transfert_debit', 'transfert_credit', 'transfert', 'paiement_debit', 'paiement_credit', 'paiement', 'depot', 'retrait'];
+            if (in_array($type, $allowedTypes)) {
+                $q->where('type', $type);
+            }
+        }
+
+        $page = $q->paginate($perPage);
+
+        return response()->json([
+            'status' => true,
+            'data' => $page->items(),
+            'meta' => [
+                'total' => $page->total(),
+                'per_page' => $page->perPage(),
+                'current_page' => $page->currentPage(),
+            ],
+        ]);
+    }
+
+    /**
      * @OA\Get(
      *     path="/api/compte/dashboard",
      *     summary="Obtenir le tableau de bord du compte utilisateur",
