@@ -52,6 +52,10 @@
                                                     "type": "string",
                                                     "example": "abc123def456..."
                                                 },
+                                                "link": {
+                                                    "type": "string",
+                                                    "example": "https://ompay-wex1.onrender.com/auth/verify?temp_token=abc123..."
+                                                },
                                                 "expires_in": {
                                                     "type": "integer",
                                                     "example": 600
