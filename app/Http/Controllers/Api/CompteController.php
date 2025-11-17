@@ -151,7 +151,7 @@ class CompteController extends Controller
 
         // Get recent transactions
         $transactions = $user->compte->transactions()
-            ->whereIn('type', ['transfert_debit', 'transfert_credit', 'transfert', 'paiement', 'depot', 'retrait'])
+            ->whereIn('type', ['transfert_debit', 'transfert_credit', 'transfert', 'paiement_debit', 'paiement_credit', 'paiement', 'depot', 'retrait'])
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();

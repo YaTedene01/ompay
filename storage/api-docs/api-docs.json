@@ -501,6 +501,8 @@
                                 "transfert_debit",
                                 "transfert_credit",
                                 "transfert",
+                                "paiement_debit",
+                                "paiement_credit",
                                 "paiement",
                                 "depot",
                                 "retrait"
@@ -644,6 +646,8 @@
                             "transfert_debit",
                             "transfert_credit",
                             "transfert",
+                            "paiement_debit",
+                            "paiement_credit",
                             "paiement",
                             "depot",
                             "retrait"
@@ -659,9 +663,13 @@
                         "example": "completed"
                     },
                     "counterparty": {
-                        "description": "ID du compte contrepartie pour les transferts",
+                        "description": "ID du compte contrepartie",
                         "type": "string",
                         "format": "uuid"
+                    },
+                    "metadata": {
+                        "description": "Données supplémentaires (QR code, etc.)",
+                        "type": "object"
                     },
                     "created_at": {
                         "type": "string",

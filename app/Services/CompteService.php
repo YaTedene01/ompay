@@ -153,6 +153,46 @@ class CompteService
             throw new \Exception('Montant non spécifié');
         }
 
-        return $this->transfert($payer, ['compte_id' => $this->getOrCreateForUser($merchant)->id], (float) $montant);
+        return DB::transaction(function () use ($payer, $merchant, $montant, $qr) {
+            $payerCompte = $this->getOrCreateForUser($payer);
+            $merchantCompte = $this->getOrCreateForUser($merchant);
+
+            if ($payerCompte->id === $merchantCompte->id) {
+                throw new \Exception('Impossible de payer vers le même compte');
+            }
+
+            if ($payerCompte->solde < $montant) {
+                throw new \Exception('Solde insuffisant');
+            }
+
+            // debit from payer
+            $txDebitData = [
+                'compte_id' => $payerCompte->id,
+                'type' => 'paiement_debit',
+                'status' => 'completed',
+                'counterparty' => $merchantCompte->id,
+                'created_by' => $payer->id,
+                'metadata' => ['qr_code_id' => $qr->id, 'code_marchand' => $qr->meta['code_marchand'] ?? null]
+            ];
+            $txDebitData['montant'] = $montant;
+            $txDebit = Transaction::create($txDebitData);
+
+            // credit to merchant
+            $txCreditData = [
+                'compte_id' => $merchantCompte->id,
+                'type' => 'paiement_credit',
+                'status' => 'completed',
+                'counterparty' => $payerCompte->id,
+                'created_by' => $payer->id,
+                'metadata' => ['qr_code_id' => $qr->id, 'code_marchand' => $qr->meta['code_marchand'] ?? null]
+            ];
+            $txCreditData['montant'] = $montant;
+            $txCredit = Transaction::create($txCreditData);
+
+            $this->repo->updateBalance($payerCompte, $payerCompte->solde - $montant);
+            $this->repo->updateBalance($merchantCompte, $merchantCompte->solde + $montant);
+
+            return ['from' => $payerCompte->fresh(), 'to' => $merchantCompte->fresh()];
+        });
     }
 }
