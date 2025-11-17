@@ -53,6 +53,19 @@ class CompteController extends Controller
         $this->service = $service;
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/compte",
+     *     summary="Informations de base du compte",
+     *     tags={"Comptes"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Informations du compte",
+     *         @OA\JsonContent(ref="#/components/schemas/Compte")
+     *     )
+     * )
+     */
     public function show(Request $request)
     {
         $user = $request->user();
@@ -92,65 +105,6 @@ class CompteController extends Controller
             'devise' => $compte->devise,
             'dernier_maj' => $compte->updated_at
         ]);
-    }
-
-    /**
-     * @OA\Post(
-     *     path="/api/compte/paiement",
-     *     summary="Effectuer un paiement à l'aide d'un code marchand",
-     *     tags={"Comptes"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"code_marchand"},
-     *             @OA\Property(property="code_marchand", type="string", example="ABC123"),
-     *             @OA\Property(property="montant", type="number", example=50.00)
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Paiement effectué",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="status", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Paiement effectué")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=400,
-     *         description="Erreur de paiement",
-     *         @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
-     *     )
-     * )
-     */
-    public function paiement(Request $request)
-    {
-        $data = $request->validate([
-            'code_marchand' => ['required', 'string'],
-            'montant' => ['required', 'numeric', 'min:0.01'],
-        ]);
-
-        $user = $request->user();
-
-        // Chercher le QR code par code_marchand dans les métadonnées
-        $qr = \App\Models\QrCode::whereJsonContains('meta->code_marchand', $data['code_marchand'])->first();
-        if (! $qr) {
-            return $this->error('Code marchand invalide', 404);
-        }
-
-        try {
-            $montant = (float) $data['montant'];
-            $result = $this->service->payerParQr($user, $qr, $montant);
-
-            // Ne retourner que les informations de l'expéditeur
-            return $this->success([
-                'from' => $result['from'],
-                'montant' => $montant,
-                'type' => 'paiement_qr'
-            ], 'Paiement effectué');
-        } catch (\Throwable $e) {
-            return $this->error($e->getMessage(), 400);
-        }
     }
 
     /**
@@ -275,6 +229,65 @@ class CompteController extends Controller
     }
 
     /**
+     * @OA\Post(
+     *     path="/api/compte/paiement",
+     *     summary="Effectuer un paiement à l'aide d'un code marchand",
+     *     tags={"Comptes"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"code_marchand"},
+     *             @OA\Property(property="code_marchand", type="string", example="ABC123"),
+     *             @OA\Property(property="montant", type="number", example=50.00)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Paiement effectué",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Paiement effectué")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Erreur de paiement",
+     *         @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+     *     )
+     * )
+     */
+    public function paiement(Request $request)
+    {
+        $data = $request->validate([
+            'code_marchand' => ['required', 'string'],
+            'montant' => ['required', 'numeric', 'min:0.01'],
+        ]);
+
+        $user = $request->user();
+
+        // Chercher le QR code par code_marchand dans les métadonnées
+        $qr = \App\Models\QrCode::whereJsonContains('meta->code_marchand', $data['code_marchand'])->first();
+        if (! $qr) {
+            return $this->error('Code marchand invalide', 404);
+        }
+
+        try {
+            $montant = (float) $data['montant'];
+            $result = $this->service->payerParQr($user, $qr, $montant);
+
+            // Ne retourner que les informations de l'expéditeur
+            return $this->success([
+                'from' => $result['from'],
+                'montant' => $montant,
+                'type' => 'paiement_qr'
+            ], 'Paiement effectué');
+        } catch (\Throwable $e) {
+            return $this->error($e->getMessage(), 400);
+        }
+    }
+
+    /**
      * @OA\Get(
      *     path="/api/compte/dashboard",
      *     summary="Obtenir le tableau de bord du compte utilisateur",
@@ -343,7 +356,6 @@ class CompteController extends Controller
             ]
         ]);
     }
-
 
     /**
      * @OA\Post(

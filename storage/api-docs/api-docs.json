@@ -180,6 +180,32 @@
                 }
             }
         },
+        "/api/compte": {
+            "get": {
+                "tags": [
+                    "Comptes"
+                ],
+                "summary": "Informations de base du compte",
+                "operationId": "7abca07d85bb3033fa6991ad42a51da1",
+                "responses": {
+                    "200": {
+                        "description": "Informations du compte",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Compte"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/compte/solde": {
             "get": {
                 "tags": [
@@ -221,75 +247,6 @@
                                         }
                                     },
                                     "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/compte/paiement": {
-            "post": {
-                "tags": [
-                    "Comptes"
-                ],
-                "summary": "Effectuer un paiement à l'aide d'un code marchand",
-                "operationId": "c5d7cf088ab86d5990dbffb471291f65",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "code_marchand"
-                                ],
-                                "properties": {
-                                    "code_marchand": {
-                                        "type": "string",
-                                        "example": "ABC123"
-                                    },
-                                    "montant": {
-                                        "type": "number",
-                                        "example": 50
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Paiement effectué",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Paiement effectué"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Erreur de paiement",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
                                 }
                             }
                         }
@@ -371,6 +328,75 @@
                                         }
                                     },
                                     "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/compte/paiement": {
+            "post": {
+                "tags": [
+                    "Comptes"
+                ],
+                "summary": "Effectuer un paiement à l'aide d'un code marchand",
+                "operationId": "c5d7cf088ab86d5990dbffb471291f65",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "code_marchand"
+                                ],
+                                "properties": {
+                                    "code_marchand": {
+                                        "type": "string",
+                                        "example": "ABC123"
+                                    },
+                                    "montant": {
+                                        "type": "number",
+                                        "example": 50
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Paiement effectué",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Paiement effectué"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur de paiement",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
                                 }
                             }
                         }
