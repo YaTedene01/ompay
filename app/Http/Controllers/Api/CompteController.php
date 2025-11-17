@@ -38,6 +38,75 @@ class CompteController extends Controller
         return $this->success($compte);
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/compte/dashboard",
+     *     summary="Obtenir le tableau de bord du compte utilisateur",
+     *     tags={"Comptes"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Données du tableau de bord",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="user", type="object",
+     *                     @OA\Property(property="id", type="integer"),
+     *                     @OA\Property(property="phone", type="string"),
+     *                     @OA\Property(property="name", type="string"),
+     *                     @OA\Property(property="is_phone_verified", type="boolean"),
+     *                     @OA\Property(property="compte", ref="#/components/schemas/Compte"),
+     *                     @OA\Property(property="qr_code", ref="#/components/schemas/QrCode"),
+     *                     @OA\Property(property="recent_transactions", type="array", @OA\Items(ref="#/components/schemas/Transaction"))
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function dashboard(Request $request)
+    {
+        $user = $request->user();
+
+        // Ensure compte exists
+        $user->load('compte');
+        if (!$user->compte) {
+            $user->compte()->create(['solde' => 500]);
+            $user->load('compte');
+        }
+
+        // Generate QR code if not exists
+        $qrCode = $user->qrCodes()->first();
+        if (!$qrCode) {
+            $qrCode = $user->qrCodes()->create([
+                'code' => \Illuminate\Support\Str::random(40),
+                'meta' => [
+                    'code_marchand' => 'USER_' . $user->id,
+                    'type' => 'user_qr',
+                    'generated_at' => \Illuminate\Support\Carbon::now()->toISOString()
+                ]
+            ]);
+        }
+
+        // Get recent transactions
+        $transactions = $user->compte->transactions()
+            ->whereIn('type', ['transfert', 'paiement'])
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+
+        return $this->success([
+            'user' => [
+                'id' => $user->id,
+                'phone' => $user->phone,
+                'name' => $user->name,
+                'is_phone_verified' => $user->is_phone_verified,
+                'compte' => $user->compte,
+                'qr_code' => $qrCode,
+                'recent_transactions' => $transactions
+            ]
+        ]);
+    }
 
 
     /**

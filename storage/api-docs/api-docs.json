@@ -37,7 +37,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Lien envoyé",
+                        "description": "Token généré pour les tests",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -46,9 +46,26 @@
                                             "type": "boolean",
                                             "example": true
                                         },
+                                        "data": {
+                                            "properties": {
+                                                "token": {
+                                                    "type": "string",
+                                                    "example": "abc123def456..."
+                                                },
+                                                "expires_in": {
+                                                    "type": "integer",
+                                                    "example": 600
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "Utilisez ce token pour vous connecter"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
                                         "message": {
                                             "type": "string",
-                                            "example": "Lien de connexion envoyé si le numéro existe."
+                                            "example": "Token généré pour les tests."
                                         }
                                     },
                                     "type": "object"
@@ -74,7 +91,7 @@
                 "tags": [
                     "Authentification"
                 ],
-                "summary": "Échanger un code d'authentification contre un token et données utilisateur",
+                "summary": "Échanger un code d'authentification contre un token d'accès",
                 "operationId": "22835a2c8a60e3ad7704be14dfea6136",
                 "requestBody": {
                     "required": true,
@@ -97,7 +114,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Authentification réussie avec données complètes",
+                        "description": "Authentification réussie",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -114,35 +131,6 @@
                                                 "token_type": {
                                                     "type": "string",
                                                     "example": "Bearer"
-                                                },
-                                                "user": {
-                                                    "properties": {
-                                                        "id": {
-                                                            "type": "integer"
-                                                        },
-                                                        "phone": {
-                                                            "type": "string"
-                                                        },
-                                                        "name": {
-                                                            "type": "string"
-                                                        },
-                                                        "is_phone_verified": {
-                                                            "type": "boolean"
-                                                        },
-                                                        "compte": {
-                                                            "$ref": "#/components/schemas/Compte"
-                                                        },
-                                                        "qr_code": {
-                                                            "$ref": "#/components/schemas/QrCode"
-                                                        },
-                                                        "recent_transactions": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "$ref": "#/components/schemas/Transaction"
-                                                            }
-                                                        }
-                                                    },
-                                                    "type": "object"
                                                 }
                                             },
                                             "type": "object"
@@ -186,6 +174,72 @@
                         }
                     }
                 }
+            }
+        },
+        "/api/compte/dashboard": {
+            "get": {
+                "tags": [
+                    "Comptes"
+                ],
+                "summary": "Obtenir le tableau de bord du compte utilisateur",
+                "operationId": "5a08469239513f8ca70d8e91ac40ca0a",
+                "responses": {
+                    "200": {
+                        "description": "Données du tableau de bord",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "user": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "phone": {
+                                                            "type": "string"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        },
+                                                        "is_phone_verified": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "compte": {
+                                                            "$ref": "#/components/schemas/Compte"
+                                                        },
+                                                        "qr_code": {
+                                                            "$ref": "#/components/schemas/QrCode"
+                                                        },
+                                                        "recent_transactions": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/components/schemas/Transaction"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/compte/transfert": {

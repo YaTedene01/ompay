@@ -63,10 +63,15 @@ class AuthController extends Controller
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Lien envoyé",
+     *         description="Token généré pour les tests",
      *         @OA\JsonContent(
      *             @OA\Property(property="status", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Lien de connexion envoyé si le numéro existe.")
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="token", type="string", example="abc123def456..."),
+     *                 @OA\Property(property="expires_in", type="integer", example=600),
+     *                 @OA\Property(property="message", type="string", example="Utilisez ce token pour vous connecter")
+     *             ),
+     *             @OA\Property(property="message", type="string", example="Token généré pour les tests.")
      *         )
      *     ),
      *     @OA\Response(
@@ -92,15 +97,20 @@ class AuthController extends Controller
             'expires_at' => $expires,
         ]);
 
-    dispatch(new SendAuthLinkJob($link));
+        // Temporairement désactivé l'envoi SMS pour les tests
+        // dispatch(new SendAuthLinkJob($link));
 
-        return $this->success(null, 'Lien de connexion envoyé si le numéro existe.');
+        return $this->success([
+            'token' => $token,
+            'expires_in' => (int) env('AUTH_LINK_EXPIRES', 10) * 60, // en secondes
+            'message' => 'Utilisez ce token pour vous connecter'
+        ], 'Token généré pour les tests.');
     }
 
     /**
      * @OA\Post(
      *     path="/api/auth/echange",
-     *     summary="Échanger un code d'authentification contre un token et données utilisateur",
+     *     summary="Échanger un code d'authentification contre un token d'accès",
      *     tags={"Authentification"},
      *     @OA\RequestBody(
      *         required=true,
@@ -111,21 +121,12 @@ class AuthController extends Controller
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Authentification réussie avec données complètes",
+     *         description="Authentification réussie",
      *         @OA\JsonContent(
      *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="data", type="object",
      *                 @OA\Property(property="access_token", type="string"),
-     *                 @OA\Property(property="token_type", type="string", example="Bearer"),
-     *                 @OA\Property(property="user", type="object",
-     *                     @OA\Property(property="id", type="integer"),
-     *                     @OA\Property(property="phone", type="string"),
-     *                     @OA\Property(property="name", type="string"),
-     *                     @OA\Property(property="is_phone_verified", type="boolean"),
-     *                     @OA\Property(property="compte", ref="#/components/schemas/Compte"),
-     *                     @OA\Property(property="qr_code", ref="#/components/schemas/QrCode"),
-     *                     @OA\Property(property="recent_transactions", type="array", @OA\Items(ref="#/components/schemas/Transaction"))
-     *                 )
+     *                 @OA\Property(property="token_type", type="string", example="Bearer")
      *             ),
      *             @OA\Property(property="message", type="string", example="Authentification réussie")
      *         )
@@ -208,16 +209,7 @@ class AuthController extends Controller
 
         return $this->success([
             'access_token' => $accessToken,
-            'token_type' => 'Bearer',
-            'user' => [
-                'id' => $user->id,
-                'phone' => $user->phone,
-                'name' => $user->name,
-                'is_phone_verified' => $user->is_phone_verified,
-                'compte' => $user->compte,
-                'qr_code' => $qrCode,
-                'recent_transactions' => $transactions
-            ]
+            'token_type' => 'Bearer'
         ], 'Authentification réussie');
     }
 }

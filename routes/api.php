@@ -23,6 +23,7 @@ Route::post('auth/echange', [AuthController::class, 'echange']);
 
 Route::middleware('auth:api')->group(function () {
     Route::get('user', function (Request $request) { return $request->user(); });
+    Route::get('compte/dashboard', [\App\Http\Controllers\Api\CompteController::class, 'dashboard']);
     Route::post('compte/transfert', [\App\Http\Controllers\Api\CompteController::class, 'transfert']);
     Route::get('transactions', [TransactionController::class, 'index']);
     Route::post('qr/payer', [QrController::class, 'payer']);
