@@ -19,6 +19,28 @@ use Illuminate\Http\Request;
  *     @OA\Property(property="created_at", type="string", format="date-time"),
  *     @OA\Property(property="updated_at", type="string", format="date-time")
  * )
+ *
+ * @OA\Schema(
+ *     schema="QrCode",
+ *     type="object",
+ *     @OA\Property(property="id", type="string", format="uuid"),
+ *     @OA\Property(property="user_id", type="integer"),
+ *     @OA\Property(property="code", type="string"),
+ *     @OA\Property(property="meta", type="object", additionalProperties=true)
+ * )
+ *
+ * @OA\Schema(
+ *     schema="Transaction",
+ *     type="object",
+ *     @OA\Property(property="id", type="string", format="uuid"),
+ *     @OA\Property(property="compte_id", type="string", format="uuid"),
+ *     @OA\Property(property="type", type="string", enum={"transfert_debit", "transfert_credit", "transfert", "paiement_debit", "paiement_credit", "paiement", "depot", "retrait"}, example="transfert_debit"),
+ *     @OA\Property(property="montant", type="number", format="float"),
+ *     @OA\Property(property="status", type="string", example="completed"),
+ *     @OA\Property(property="counterparty", type="string", format="uuid", description="ID du compte contrepartie"),
+ *     @OA\Property(property="metadata", type="object", description="Données supplémentaires (QR code, etc.)"),
+ *     @OA\Property(property="created_at", type="string", format="date-time")
+ * )
  */
 class CompteController extends Controller
 {

@@ -7,57 +7,10 @@ use App\Models\Transaction;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 
-/**
- * @OA\Schema(
- *     schema="Transaction",
- *     type="object",
- *     @OA\Property(property="id", type="string", format="uuid"),
- *     @OA\Property(property="compte_id", type="string", format="uuid"),
- *     @OA\Property(property="type", type="string", enum={"transfert_debit", "transfert_credit", "transfert", "paiement_debit", "paiement_credit", "paiement", "depot", "retrait"}, example="transfert_debit"),
- *     @OA\Property(property="montant", type="number", format="float"),
- *     @OA\Property(property="status", type="string", example="completed"),
- *     @OA\Property(property="counterparty", type="string", format="uuid", description="ID du compte contrepartie"),
- *     @OA\Property(property="metadata", type="object", description="Données supplémentaires (QR code, etc.)"),
- *     @OA\Property(property="created_at", type="string", format="date-time")
- * )
- */
 class TransactionController extends Controller
 {
     use ApiResponse;
 
-    /**
-     * @OA\Get(
-     *     path="/api/transactions",
-     *     summary="Lister les transactions de l'utilisateur",
-     *     tags={"Transactions"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(
-     *         name="per_page",
-     *         in="query",
-     *         @OA\Schema(type="integer", default=15),
-     *         description="Nombre d'éléments par page"
-     *     ),
-     *     @OA\Parameter(
-     *         name="type",
-     *         in="query",
-     *         @OA\Schema(type="string", enum={"transfert_debit", "transfert_credit", "transfert", "paiement_debit", "paiement_credit", "paiement", "depot", "retrait"}),
-     *         description="Filtrer par type de transaction"
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Liste des transactions",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="status", type="boolean", example=true),
-     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Transaction")),
-     *             @OA\Property(property="meta", type="object",
-     *                 @OA\Property(property="total", type="integer"),
-     *                 @OA\Property(property="per_page", type="integer"),
-     *                 @OA\Property(property="current_page", type="integer")
-     *             )
-     *         )
-     *     )
-     * )
-     */
     public function index(Request $request)
     {
         $user = $request->user();
