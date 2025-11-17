@@ -28,7 +28,4 @@ Route::middleware('auth:api')->group(function () {
     Route::post('compte/paiement', [\App\Http\Controllers\Api\CompteController::class, 'paiement']);
     Route::post('compte/transfert', [\App\Http\Controllers\Api\CompteController::class, 'transfert']);
     Route::get('compte/transactions', [\App\Http\Controllers\Api\CompteController::class, 'transactions']);
-    // Routes de compatibilité
-    Route::get('transactions', [TransactionController::class, 'index']);
-    Route::post('qr/payer', [QrController::class, 'payer']);
 });
