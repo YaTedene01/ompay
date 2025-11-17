@@ -180,209 +180,6 @@
                 }
             }
         },
-        "/api/compte/solde": {
-            "get": {
-                "tags": [
-                    "Comptes"
-                ],
-                "summary": "Consulter le solde de mon compte",
-                "operationId": "64fe5833ca07fbfe690231757453de90",
-                "responses": {
-                    "200": {
-                        "description": "Solde du compte",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "compte_id": {
-                                                    "type": "string",
-                                                    "example": "uuid-here"
-                                                },
-                                                "solde": {
-                                                    "type": "number",
-                                                    "example": 150.5
-                                                },
-                                                "devise": {
-                                                    "type": "string",
-                                                    "example": "XOF"
-                                                },
-                                                "dernier_maj": {
-                                                    "type": "string",
-                                                    "format": "date-time"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/compte/transactions": {
-            "get": {
-                "tags": [
-                    "Comptes"
-                ],
-                "summary": "Lister les transactions de mon compte",
-                "operationId": "cee45d0031a4b5b2a3a1b8d1b3c2bc26",
-                "parameters": [
-                    {
-                        "name": "per_page",
-                        "in": "query",
-                        "description": "Nombre d'éléments par page",
-                        "schema": {
-                            "type": "integer",
-                            "default": 15
-                        }
-                    },
-                    {
-                        "name": "type",
-                        "in": "query",
-                        "description": "Filtrer par type de transaction",
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "transfert_debit",
-                                "transfert_credit",
-                                "transfert",
-                                "paiement_debit",
-                                "paiement_credit",
-                                "paiement",
-                                "depot",
-                                "retrait"
-                            ]
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Liste des transactions",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/Transaction"
-                                            }
-                                        },
-                                        "meta": {
-                                            "properties": {
-                                                "total": {
-                                                    "type": "integer"
-                                                },
-                                                "per_page": {
-                                                    "type": "integer"
-                                                },
-                                                "current_page": {
-                                                    "type": "integer"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/compte/paiement": {
-            "post": {
-                "tags": [
-                    "Comptes"
-                ],
-                "summary": "Effectuer un paiement à l'aide d'un code marchand",
-                "operationId": "c5d7cf088ab86d5990dbffb471291f65",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "code_marchand"
-                                ],
-                                "properties": {
-                                    "code_marchand": {
-                                        "type": "string",
-                                        "example": "ABC123"
-                                    },
-                                    "montant": {
-                                        "type": "number",
-                                        "example": 50
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Paiement effectué",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Paiement effectué"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Erreur de paiement",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
         "/api/compte/dashboard": {
             "get": {
                 "tags": [
@@ -511,6 +308,209 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/compte/paiement": {
+            "post": {
+                "tags": [
+                    "Comptes"
+                ],
+                "summary": "Effectuer un paiement à l'aide d'un code marchand",
+                "operationId": "c5d7cf088ab86d5990dbffb471291f65",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "code_marchand"
+                                ],
+                                "properties": {
+                                    "code_marchand": {
+                                        "type": "string",
+                                        "example": "ABC123"
+                                    },
+                                    "montant": {
+                                        "type": "number",
+                                        "example": 50
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Paiement effectué",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Paiement effectué"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur de paiement",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/compte/transactions": {
+            "get": {
+                "tags": [
+                    "Comptes"
+                ],
+                "summary": "Lister les transactions de mon compte",
+                "operationId": "cee45d0031a4b5b2a3a1b8d1b3c2bc26",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Nombre d'éléments par page",
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "Filtrer par type de transaction",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "transfert_debit",
+                                "transfert_credit",
+                                "transfert",
+                                "paiement_debit",
+                                "paiement_credit",
+                                "paiement",
+                                "depot",
+                                "retrait"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des transactions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Transaction"
+                                            }
+                                        },
+                                        "meta": {
+                                            "properties": {
+                                                "total": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                },
+                                                "current_page": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/compte/solde": {
+            "get": {
+                "tags": [
+                    "Comptes"
+                ],
+                "summary": "Consulter le solde de mon compte",
+                "operationId": "64fe5833ca07fbfe690231757453de90",
+                "responses": {
+                    "200": {
+                        "description": "Solde du compte",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "compte_id": {
+                                                    "type": "string",
+                                                    "example": "uuid-here"
+                                                },
+                                                "solde": {
+                                                    "type": "number",
+                                                    "example": 150.5
+                                                },
+                                                "devise": {
+                                                    "type": "string",
+                                                    "example": "XOF"
+                                                },
+                                                "dernier_maj": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }

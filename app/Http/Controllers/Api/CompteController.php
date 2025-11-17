@@ -53,221 +53,6 @@ class CompteController extends Controller
         $this->service = $service;
     }
 
-
-    /**
-     * @OA\Get(
-     *     path="/api/compte/solde",
-     *     summary="Consulter le solde de mon compte",
-     *     tags={"Comptes"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Solde du compte",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="status", type="boolean", example=true),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="compte_id", type="string", example="uuid-here"),
-     *                 @OA\Property(property="solde", type="number", example=150.50),
-     *                 @OA\Property(property="devise", type="string", example="XOF"),
-     *                 @OA\Property(property="dernier_maj", type="string", format="date-time")
-     *             )
-     *         )
-     *     )
-     * )
-     */
-    public function solde(Request $request)
-    {
-        $user = $request->user();
-        $compte = $this->service->getOrCreateForUser($user);
-
-        return $this->success([
-            'compte_id' => $compte->id,
-            'solde' => $compte->solde,
-            'devise' => $compte->devise,
-            'dernier_maj' => $compte->updated_at
-        ]);
-    }
-
-    /**
-     * @OA\Get(
-     *     path="/api/compte/transactions",
-     *     summary="Lister les transactions de mon compte",
-     *     tags={"Comptes"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(
-     *         name="per_page",
-     *         in="query",
-     *         @OA\Schema(type="integer", default=15),
-     *         description="Nombre d'éléments par page"
-     *     ),
-     *     @OA\Parameter(
-     *         name="type",
-     *         in="query",
-     *         @OA\Schema(type="string", enum={"transfert_debit", "transfert_credit", "transfert", "paiement_debit", "paiement_credit", "paiement", "depot", "retrait"}),
-     *         description="Filtrer par type de transaction"
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Liste des transactions",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="status", type="boolean", example=true),
-     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Transaction")),
-     *             @OA\Property(property="meta", type="object",
-     *                 @OA\Property(property="total", type="integer"),
-     *                 @OA\Property(property="per_page", type="integer"),
-     *                 @OA\Property(property="current_page", type="integer")
-     *             )
-     *         )
-     *     )
-     * )
-     */
-    public function transactions(Request $request)
-    {
-        $user = $request->user();
-        $compte = $this->service->getOrCreateForUser($user);
-
-        $perPage = (int) $request->query('per_page', 15);
-        $q = \App\Models\Transaction::where('compte_id', $compte->id)
-            ->whereIn('type', ['transfert_debit', 'transfert_credit', 'transfert', 'paiement_debit', 'paiement_credit', 'paiement', 'depot', 'retrait'])
-            ->orderBy('created_at', 'desc');
-
-        if ($type = $request->query('type')) {
-            $allowedTypes = ['transfert_debit', 'transfert_credit', 'transfert', 'paiement_debit', 'paiement_credit', 'paiement', 'depot', 'retrait'];
-            if (in_array($type, $allowedTypes)) {
-                $q->where('type', $type);
-            }
-        }
-
-        $page = $q->paginate($perPage);
-
-        // Formater les données des transactions
-        $formattedTransactions = collect($page->items())->map(function ($transaction) {
-            $data = [
-                'id' => $transaction->id,
-                'reference' => $transaction->id, // Utiliser l'ID comme référence
-                'type' => $transaction->type,
-                'montant' => $transaction->montant,
-                'date' => $transaction->created_at->toISOString(),
-                'status' => $transaction->status,
-            ];
-
-            // Déterminer l'expéditeur et le destinataire selon le type de transaction
-            switch ($transaction->type) {
-                case 'transfert_debit':
-                    $data['expediteur'] = 'Vous';
-                    $data['destinataire'] = $this->getUserInfoByAccountId($transaction->counterparty);
-                    $data['description'] = 'Transfert envoyé';
-                    break;
-
-                case 'transfert_credit':
-                    $data['expediteur'] = $this->getUserInfoByAccountId($transaction->counterparty);
-                    $data['destinataire'] = 'Vous';
-                    $data['description'] = 'Transfert reçu';
-                    break;
-
-                case 'paiement_debit':
-                    $data['expediteur'] = 'Vous';
-                    $data['destinataire'] = $this->getUserInfoByAccountId($transaction->counterparty);
-                    $data['description'] = 'Paiement QR';
-                    break;
-
-                case 'paiement_credit':
-                    $data['expediteur'] = $this->getUserInfoByAccountId($transaction->counterparty);
-                    $data['destinataire'] = 'Vous';
-                    $data['description'] = 'Paiement QR reçu';
-                    break;
-
-                case 'depot':
-                    $data['expediteur'] = 'Système';
-                    $data['destinataire'] = 'Vous';
-                    $data['description'] = 'Dépôt';
-                    break;
-
-                case 'retrait':
-                    $data['expediteur'] = 'Vous';
-                    $data['destinataire'] = 'Système';
-                    $data['description'] = 'Retrait';
-                    break;
-
-                default:
-                    $data['expediteur'] = 'Inconnu';
-                    $data['destinataire'] = 'Inconnu';
-                    $data['description'] = ucfirst(str_replace('_', ' ', $transaction->type));
-            }
-
-            return $data;
-        });
-
-        return response()->json([
-            'status' => true,
-            'data' => $formattedTransactions,
-            'meta' => [
-                'total' => $page->total(),
-                'per_page' => $page->perPage(),
-                'current_page' => $page->currentPage(),
-            ],
-        ]);
-    }
-
-    /**
-     * @OA\Post(
-     *     path="/api/compte/paiement",
-     *     summary="Effectuer un paiement à l'aide d'un code marchand",
-     *     tags={"Comptes"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"code_marchand"},
-     *             @OA\Property(property="code_marchand", type="string", example="ABC123"),
-     *             @OA\Property(property="montant", type="number", example=50.00)
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Paiement effectué",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="status", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Paiement effectué")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=400,
-     *         description="Erreur de paiement",
-     *         @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
-     *     )
-     * )
-     */
-    public function paiement(Request $request)
-    {
-        $data = $request->validate([
-            'code_marchand' => ['required', 'string'],
-            'montant' => ['required', 'numeric', 'min:0.01'],
-        ]);
-
-        $user = $request->user();
-
-        // Chercher le QR code par code_marchand dans les métadonnées
-        $qr = \App\Models\QrCode::whereJsonContains('meta->code_marchand', $data['code_marchand'])->first();
-        if (! $qr) {
-            return $this->error('Code marchand invalide', 404);
-        }
-
-        try {
-            $montant = (float) $data['montant'];
-            $result = $this->service->payerParQr($user, $qr, $montant);
-
-            // Ne retourner que les informations de l'expéditeur
-            return $this->success([
-                'from' => $result['from'],
-                'montant' => $montant,
-                'type' => 'paiement_qr'
-            ], 'Paiement effectué');
-        } catch (\Throwable $e) {
-            return $this->error($e->getMessage(), 400);
-        }
-    }
-
     /**
      * @OA\Get(
      *     path="/api/compte/dashboard",
@@ -393,6 +178,220 @@ class CompteController extends Controller
         } catch (\Throwable $e) {
             return $this->error($e->getMessage(), 400);
         }
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/compte/paiement",
+     *     summary="Effectuer un paiement à l'aide d'un code marchand",
+     *     tags={"Comptes"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"code_marchand"},
+     *             @OA\Property(property="code_marchand", type="string", example="ABC123"),
+     *             @OA\Property(property="montant", type="number", example=50.00)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Paiement effectué",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Paiement effectué")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Erreur de paiement",
+     *         @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+     *     )
+     * )
+     */
+    public function paiement(Request $request)
+    {
+        $data = $request->validate([
+            'code_marchand' => ['required', 'string'],
+            'montant' => ['required', 'numeric', 'min:0.01'],
+        ]);
+
+        $user = $request->user();
+
+        // Chercher le QR code par code_marchand dans les métadonnées
+        $qr = \App\Models\QrCode::whereJsonContains('meta->code_marchand', $data['code_marchand'])->first();
+        if (! $qr) {
+            return $this->error('Code marchand invalide', 404);
+        }
+
+        try {
+            $montant = (float) $data['montant'];
+            $result = $this->service->payerParQr($user, $qr, $montant);
+
+            // Ne retourner que les informations de l'expéditeur
+            return $this->success([
+                'from' => $result['from'],
+                'montant' => $montant,
+                'type' => 'paiement_qr'
+            ], 'Paiement effectué');
+        } catch (\Throwable $e) {
+            return $this->error($e->getMessage(), 400);
+        }
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/compte/transactions",
+     *     summary="Lister les transactions de mon compte",
+     *     tags={"Comptes"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         @OA\Schema(type="integer", default=15),
+     *         description="Nombre d'éléments par page"
+     *     ),
+     *     @OA\Parameter(
+     *         name="type",
+     *         in="query",
+     *         @OA\Schema(type="string", enum={"transfert_debit", "transfert_credit", "transfert", "paiement_debit", "paiement_credit", "paiement", "depot", "retrait"}),
+     *         description="Filtrer par type de transaction"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste des transactions",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Transaction")),
+     *             @OA\Property(property="meta", type="object",
+     *                 @OA\Property(property="total", type="integer"),
+     *                 @OA\Property(property="per_page", type="integer"),
+     *                 @OA\Property(property="current_page", type="integer")
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function transactions(Request $request)
+    {
+        $user = $request->user();
+        $compte = $this->service->getOrCreateForUser($user);
+
+        $perPage = (int) $request->query('per_page', 15);
+        $q = \App\Models\Transaction::where('compte_id', $compte->id)
+            ->whereIn('type', ['transfert_debit', 'transfert_credit', 'transfert', 'paiement_debit', 'paiement_credit', 'paiement', 'depot', 'retrait'])
+            ->orderBy('created_at', 'desc');
+
+        if ($type = $request->query('type')) {
+            $allowedTypes = ['transfert_debit', 'transfert_credit', 'transfert', 'paiement_debit', 'paiement_credit', 'paiement', 'depot', 'retrait'];
+            if (in_array($type, $allowedTypes)) {
+                $q->where('type', $type);
+            }
+        }
+
+        $page = $q->paginate($perPage);
+
+        // Formater les données des transactions
+        $formattedTransactions = collect($page->items())->map(function ($transaction) {
+            $data = [
+                'id' => $transaction->id,
+                'reference' => $transaction->id, // Utiliser l'ID comme référence
+                'type' => $transaction->type,
+                'montant' => $transaction->montant,
+                'date' => $transaction->created_at->toISOString(),
+                'status' => $transaction->status,
+            ];
+
+            // Déterminer l'expéditeur et le destinataire selon le type de transaction
+            switch ($transaction->type) {
+                case 'transfert_debit':
+                    $data['expediteur'] = 'Vous';
+                    $data['destinataire'] = $this->getUserInfoByAccountId($transaction->counterparty);
+                    $data['description'] = 'Transfert envoyé';
+                    break;
+
+                case 'transfert_credit':
+                    $data['expediteur'] = $this->getUserInfoByAccountId($transaction->counterparty);
+                    $data['destinataire'] = 'Vous';
+                    $data['description'] = 'Transfert reçu';
+                    break;
+
+                case 'paiement_debit':
+                    $data['expediteur'] = 'Vous';
+                    $data['destinataire'] = $this->getUserInfoByAccountId($transaction->counterparty);
+                    $data['description'] = 'Paiement QR';
+                    break;
+
+                case 'paiement_credit':
+                    $data['expediteur'] = $this->getUserInfoByAccountId($transaction->counterparty);
+                    $data['destinataire'] = 'Vous';
+                    $data['description'] = 'Paiement QR reçu';
+                    break;
+
+                case 'depot':
+                    $data['expediteur'] = 'Système';
+                    $data['destinataire'] = 'Vous';
+                    $data['description'] = 'Dépôt';
+                    break;
+
+                case 'retrait':
+                    $data['expediteur'] = 'Vous';
+                    $data['destinataire'] = 'Système';
+                    $data['description'] = 'Retrait';
+                    break;
+
+                default:
+                    $data['expediteur'] = 'Inconnu';
+                    $data['destinataire'] = 'Inconnu';
+                    $data['description'] = ucfirst(str_replace('_', ' ', $transaction->type));
+            }
+
+            return $data;
+        });
+
+        return response()->json([
+            'status' => true,
+            'data' => $formattedTransactions,
+            'meta' => [
+                'total' => $page->total(),
+                'per_page' => $page->perPage(),
+                'current_page' => $page->currentPage(),
+            ],
+        ]);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/compte/solde",
+     *     summary="Consulter le solde de mon compte",
+     *     tags={"Comptes"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Solde du compte",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="compte_id", type="string", example="uuid-here"),
+     *                 @OA\Property(property="solde", type="number", example=150.50),
+     *                 @OA\Property(property="devise", type="string", example="XOF"),
+     *                 @OA\Property(property="dernier_maj", type="string", format="date-time")
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function solde(Request $request)
+    {
+        $user = $request->user();
+        $compte = $this->service->getOrCreateForUser($user);
+
+        return $this->success([
+            'compte_id' => $compte->id,
+            'solde' => $compte->solde,
+            'devise' => $compte->devise,
+            'dernier_maj' => $compte->updated_at
+        ]);
     }
 
     /**
