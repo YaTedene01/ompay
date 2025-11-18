@@ -101,7 +101,7 @@ class AuthController extends Controller
         // Temporairement désactivé l'envoi SMS pour les tests
         // dispatch(new SendAuthLinkJob($link));
 
-        $linkUrl = env('APP_URL') . '/auth/verify?temp_token=' . $token;
+        // $linkUrl = env('APP_URL') . '/auth/verify?temp_token=' . $token;
 
         return $this->success([
             'token' => $token,
