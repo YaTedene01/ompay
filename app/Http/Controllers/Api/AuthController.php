@@ -101,11 +101,11 @@ class AuthController extends Controller
         // Temporairement désactivé l'envoi SMS pour les tests
         // dispatch(new SendAuthLinkJob($link));
 
-        // $linkUrl = env('APP_URL') . '/auth/verify?temp_token=' . $token;
+        $linkUrl = env('APP_URL') . '/auth/verify?temp_token=' . $token;
 
         return $this->success([
             'token' => $token,
-            'link' => $linkUrl,
+            // 'link' => $linkUrl,
             'expires_in' => (int) env('AUTH_LINK_EXPIRES', 10) * 60, // en secondes
             'message' => 'Utilisez ce token pour vous connecter'
         ], 'Token généré pour les tests.');
