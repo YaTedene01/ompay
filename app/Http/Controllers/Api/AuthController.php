@@ -63,10 +63,16 @@ class AuthController extends Controller
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Lien envoyé",
+     *         description="Token généré pour les tests",
      *         @OA\JsonContent(
      *             @OA\Property(property="status", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Lien de connexion envoyé si le numéro existe.")
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="token", type="string", example="abc123def456..."),
+     *                 @OA\Property(property="link", type="string", example="https://ompay-wex1.onrender.com/auth/verify?temp_token=abc123..."),
+     *                 @OA\Property(property="expires_in", type="integer", example=600),
+     *                 @OA\Property(property="message", type="string", example="Utilisez ce token pour vous connecter")
+     *             ),
+     *             @OA\Property(property="message", type="string", example="Token généré pour les tests.")
      *         )
      *     ),
      *     @OA\Response(
@@ -92,10 +98,17 @@ class AuthController extends Controller
             'expires_at' => $expires,
         ]);
 
-        // Réactiver l'envoi SMS
-        dispatch(new SendAuthLinkJob($link));
+        // Temporairement désactivé l'envoi SMS pour les tests
+        // dispatch(new SendAuthLinkJob($link));
 
-        return $this->success(null, 'Lien de connexion envoyé si le numéro existe.');
+        $linkUrl = env('APP_URL') . '/auth/verify?temp_token=' . $token;
+
+        return $this->success([
+            'token' => $token,
+            'link' => $linkUrl,
+            'expires_in' => (int) env('AUTH_LINK_EXPIRES', 10) * 60, // en secondes
+            'message' => 'Utilisez ce token pour vous connecter'
+        ], 'Token généré pour les tests.');
     }
 
     /**
