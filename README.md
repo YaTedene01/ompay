@@ -15,7 +15,7 @@ OMPAY est une application de paiement mobile développée avec Laravel, offrant 
 
 - **Laravel** : Framework PHP pour le backend
 - **Laravel Passport** : Authentification OAuth2
-- **MySQL** : Base de données
+- **PGSQL** : Base de données
 - **Swagger/OpenAPI** : Documentation API
 - **Architecture** : Repository/Service avec injection de dépendance
 
