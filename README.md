@@ -1,111 +1,115 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# OMPAY - Application de Paiement Mobile
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+OMPAY est une application de paiement mobile développée avec Laravel, offrant l'authentification par SMS, les transferts d'argent et les paiements QR.
 
-## About Laravel
+## Fonctionnalités
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Authentification sécurisée par SMS avec tokens temporaires
+- Gestion des comptes utilisateurs avec soldes
+- Transferts d'argent entre utilisateurs
+- Paiements via codes QR marchands
+- Historique des transactions avec pagination
+- API RESTful documentée avec Swagger
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Technologies Utilisées
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **Laravel** : Framework PHP pour le backend
+- **Laravel Passport** : Authentification OAuth2
+- **MySQL** : Base de données
+- **Swagger/OpenAPI** : Documentation API
+- **Architecture** : Repository/Service avec injection de dépendance
 
-## Learning Laravel
+## API OMPAY - Documentation des Endpoints
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+OMPAY est une application de paiement mobile développée avec Laravel, utilisant l'authentification par SMS et les tokens Passport.
 
-## API - Endpoints essentiels (ompay)
+### Authentification
 
-Auth
+#### POST /api/auth/envoyer-lien
+- **Corps** : `{ "phone": "string" }`
+- **Description** : Génère un token temporaire et retourne un lien de vérification. L'envoi SMS est désactivé pour les tests.
+- **Réponse** : `{ "status": true, "data": { "token": "...", "expires_in": 600, "message": "..." } }`
 
--- POST /api/auth/envoyer-lien
-	- Body: { phone: string, redirect_url?: string }
-	- Description: génère un lien à usage unique et envoie un SMS (job queue). Le lien redirige vers le front avec un temp_token.
+#### POST /api/auth/echange
+- **Corps** : `{ "temp_token": "string" }`
+- **Description** : Échange le token temporaire contre un token d'accès Passport. Crée l'utilisateur si nécessaire.
+- **Réponse** : `{ "status": true, "data": { "access_token": "...", "token_type": "Bearer" } }`
 
--- POST /api/auth/echange
-	- Body: { temp_token: string }
-	- Description: échange le token temporaire pour un access_token Passport. Retourne { access_token, token_type, user }.
+#### POST /api/auth/logout (auth:api requis)
+- **Description** : Révoque le token d'accès actuel pour déconnecter l'utilisateur.
+- **Réponse** : `{ "status": true, "message": "Déconnexion réussie" }`
 
-Compte
+### Comptes (auth:api requis)
 
-- GET /api/compte (auth:api)
-	- Retourne le compte de l'utilisateur et le solde.
+#### GET /api/compte/dashboard
+- **Description** : Retourne le tableau de bord complet de l'utilisateur (compte, QR code, transactions récentes).
+- **Réponse** : Données utilisateur, compte, QR code et dernières transactions.
 
+#### GET /api/compte/solde
+- **Description** : Consulte le solde du compte.
+- **Réponse** : `{ "compte_id": "...", "solde": 150.50, "devise": "XOF" }`
 
-- POST /api/compte/depot (auth:api)
-	- Body: { montant }
-	- Description: effectue un dépôt (création de transaction et augmentation du solde).
+#### POST /api/compte/transfert
+- **Corps** : `{ "montant": 25.00, "to_phone": "771234567" }` ou `{ "to_compte_id": "uuid" }`
+- **Description** : Effectue un transfert d'argent vers un autre utilisateur.
+- **Réponse** : Détails du transfert effectué.
 
+#### POST /api/compte/paiement
+- **Corps** : `{ "code_marchand": "ABC123", "montant": 50.00 }`
+- **Description** : Effectue un paiement via un code QR marchand.
+- **Réponse** : Détails du paiement.
 
-- POST /api/compte/retrait (auth:api)
-	- Body: { montant }
-	- Description: effectue un retrait si le solde est suffisant.
+#### GET /api/compte/transactions
+- **Paramètres** : `?per_page=15&type=transfert`
+- **Description** : Liste les transactions du compte avec pagination.
+- **Réponse** : Liste paginée des transactions.
 
-Transactions
+### Notes Techniques
 
-- GET /api/transactions (auth:api)
-	- Query: ?page=1&per_page=15&type=transfer
-	- Description: liste les transactions du compte.
+- **Authentification** : Utilise Laravel Passport avec le driver `auth:api`.
+- **Jobs** : L'envoi de SMS est géré par `SendAuthLinkJob` (actuellement désactivé pour les tests).
+- **Architecture** : Suit le pattern Repository/Service avec injection de dépendance.
+- **Ressources API** : Utilise Laravel API Resources pour formater les réponses.
+- **Production** : Configurez un fournisseur SMS réel (Twilio) et une file d'attente (Redis/Queue).
 
-QR
+## Installation et Configuration
 
-- POST /api/qr/generate (auth:api)
-	- Body: { meta?: object }
-	- Description: génère un QR unique lié à l'utilisateur (stocké en base).
+1. **Cloner le repository**
+   ```bash
+   git clone <repository-url>
+   cd ompay
+   ```
 
-Notes
+2. **Installer les dépendances**
+   ```bash
+   composer install
+   npm install
+   ```
 
-- Les tokens Passport sont utilisés pour l'authentification (driver `auth:api`).
-- Les jobs d'envoi de SMS sont mis en file (voir `App\Jobs\SendAuthLinkJob`).
-- Pour la production, configurez un provider SMS réel et mettez en place une file (Redis, database queue, etc.).
+3. **Configuration**
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   php artisan passport:install
+   ```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+4. **Base de données**
+   ```bash
+   php artisan migrate
+   php artisan db:seed
+   ```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+5. **Démarrer le serveur**
+   ```bash
+   php artisan serve
+   ```
 
-## Laravel Sponsors
+## Déploiement
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Consultez `README_DEPLOY.md` pour les instructions de déploiement en production.
 
-### Premium Partners
+## Licence
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+Ce projet est sous licence MIT.
 
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+YA TEDENE FAYE
