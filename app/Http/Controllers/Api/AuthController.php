@@ -209,4 +209,27 @@ class AuthController extends Controller
             'token_type' => 'Bearer'
         ], 'Authentification réussie');
     }
+
+    /**
+     * @OA\Post(
+     *     path="/api/auth/logout",
+     *     summary="Déconnexion de l'utilisateur",
+     *     tags={"Authentification"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Déconnexion réussie",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Déconnexion réussie")
+     *         )
+     *     )
+     * )
+     */
+    public function logout(Request $request)
+    {
+        $request->user()->token()->revoke();
+
+        return $this->success(null, 'Déconnexion réussie');
+    }
 }
