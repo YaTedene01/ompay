@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Jobs\SendAuthLinkJob;
 use App\Models\AuthLink;
 use App\Models\User;
+use App\Services\UserService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -49,6 +50,13 @@ use Illuminate\Support\Carbon;
 class AuthController extends Controller
 {
     use ApiResponse;
+
+    public UserService $userService;
+
+    public function __construct(UserService $userService)
+    {
+        $this->userService = $userService;
+    }
 
     /**
      * @OA\Post(
@@ -161,21 +169,10 @@ class AuthController extends Controller
             return $this->error('Le lien a expiré', 400);
         }
 
-        $user = User::firstWhere('phone', $link->phone);
-        if (! $user) {
-            // Crée un utilisateur minimal requis par la table users
-            $user = User::create([
-                'phone' => $link->phone,
-                'name' => 'User '.$link->phone,
-                'email' => Str::lower(Str::slug($link->phone)).'@example.local',
-                'password' => bcrypt(Str::random(12)),
-            ]);
-        }
+        $user = $this->userService->createUserForPhone($link->phone);
 
         // Marque le téléphone comme vérifié
-        $user->is_phone_verified = true;
-        $user->phone_verified_at = $user->phone_verified_at ?? Carbon::now();
-        $user->save();
+        $this->userService->verifyPhone($user);
 
         // Ensure compte exists 
         $user->load('compte');

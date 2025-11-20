@@ -7,21 +7,14 @@ use App\Models\User;
 
 class CompteRepository
 {
-    private Compte $compte;
-
-    public function __construct($compte)
-    {
-        $this->compte = $compte;
-    }
-
     public function create(array $data): Compte
     {
-        return $this->compte->create($data);
+        return Compte::create($data);
     }
 
     public function getByUser(User $user): ?Compte
     {
-        return Compte::where('user_id', $user->id)->first();
+        return $user->compte;
     }
 
     public function createForUser(User $user, array $data = []): Compte
@@ -34,10 +27,8 @@ class CompteRepository
         return Compte::find($id);
     }
 
-    public function updateBalance(Compte $compte, float $newBalance): Compte
+    public function updateBalance(Compte $compte, float $newBalance): bool
     {
-        $compte->solde = $newBalance;
-        $compte->save();
-        return $compte;
+        return $compte->update(['solde' => $newBalance]);
     }
 }

@@ -6,6 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Compte;
 use App\Traits\ApiResponse;
 use App\Services\CompteService;
+use App\Http\Resources\UserResource;
+use App\Http\Resources\Compte as CompteResource;
+use App\Http\Resources\QrCodeResource;
+use App\Http\Resources\TransactionResource;
 use Illuminate\Http\Request;
 
 /**
@@ -111,15 +115,10 @@ class CompteController extends Controller
             ->get();
 
         return $this->success([
-            'user' => [
-                'id' => $user->id,
-                'phone' => $user->phone,
-                'name' => $user->name,
-                'is_phone_verified' => $user->is_phone_verified,
-                'compte' => $user->compte,
-                'qr_code' => $qrCode,
-                'recent_transactions' => $transactions
-            ]
+            'user' => new UserResource($user),
+            'compte' => new CompteResource($user->compte),
+            'qr_code' => new QrCodeResource($qrCode),
+            'recent_transactions' => TransactionResource::collection($transactions)
         ]);
     }
 
@@ -351,7 +350,7 @@ class CompteController extends Controller
 
         return response()->json([
             'status' => true,
-            'data' => $formattedTransactions,
+            'data' => TransactionResource::collection($page->items()),
             'meta' => [
                 'total' => $page->total(),
                 'per_page' => $page->perPage(),

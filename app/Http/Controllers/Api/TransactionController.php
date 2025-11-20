@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use App\Traits\ApiResponse;
+use App\Http\Resources\TransactionResource;
 use Illuminate\Http\Request;
 
 class TransactionController extends Controller
@@ -35,7 +36,7 @@ class TransactionController extends Controller
 
         return response()->json([
             'status' => true,
-            'data' => $page->items(),
+            'data' => TransactionResource::collection($page->items()),
             'meta' => [
                 'total' => $page->total(),
                 'per_page' => $page->perPage(),

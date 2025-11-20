@@ -26,50 +26,6 @@ class CompteService
         return $c;
     }
 
-    public function depot(User $user, float $montant): array
-    {
-        return DB::transaction(function () use ($user, $montant) {
-            $c = $this->getOrCreateForUser($user);
-
-            $txData = [
-                'compte_id' => $c->id,
-                'type' => 'depot',
-                'montant' => $montant,
-                'status' => 'completed',
-                'created_by' => $user->id,
-            ];
-            $tx = Transaction::create($txData);
-
-            $new = $c->solde + $montant;
-            $this->repo->updateBalance($c, $new);
-
-            return ['compte' => $c, 'transaction' => $tx];
-        });
-    }
-
-    public function retrait(User $user, float $montant): array
-    {
-        return DB::transaction(function () use ($user, $montant) {
-            $c = $this->getOrCreateForUser($user);
-            if ($c->solde < $montant) {
-                throw new \Exception('Solde insuffisant');
-            }
-
-            $txData = [
-                'compte_id' => $c->id,
-                'type' => 'retrait',
-                'montant' => $montant,
-                'status' => 'completed',
-                'created_by' => $user->id,
-            ];
-            $tx = Transaction::create($txData);
-
-            $new = $c->solde - $montant;
-            $this->repo->updateBalance($c, $new);
-
-            return ['compte' => $c, 'transaction' => $tx];
-        });
-    }
 
     /**
      * Transfer funds from one user to another (by phone or compte id)
