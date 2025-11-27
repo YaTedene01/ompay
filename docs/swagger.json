@@ -2,7 +2,7 @@
     "openapi": "3.0.0",
     "info": {
         "title": "OMPAY API",
-        "description": "Documentation OpenAPI pour l'API OMPAY. Application de paiement mobile avec authentification par SMS, transferts d'argent et paiements QR.",
+        "description": "Documentation OpenAPI pour l'API OMPAY. Application de paiement mobile avec authentification par code OTP, transferts d'argent et paiements QR.",
         "version": "1.0.0"
     },
     "servers": [
@@ -12,27 +12,25 @@
         }
     ],
     "paths": {
-        "/api/auth/envoyer-lien": {
+        "/api/auth/send-otp": {
             "post": {
                 "tags": [
                     "Authentification"
                 ],
-                "summary": "Envoyer un lien d'authentification",
-                "operationId": "17f81560c708ec96b34131e426c01f56",
+                "summary": "Envoyer un code OTP d'authentification",
+                "operationId": "sendOtp",
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
+                                "required": [
+                                    "phone"
+                                ],
                                 "properties": {
                                     "phone": {
                                         "type": "string",
                                         "example": "771234567"
-                                    },
-                                    "redirect_url": {
-                                        "type": "string",
-                                        "format": "url",
-                                        "example": "http://localhost:3000"
                                     }
                                 },
                                 "type": "object"
@@ -42,7 +40,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Lien envoyé",
+                        "description": "Code OTP envoyé par SMS",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -53,7 +51,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Lien de connexion envoyé si le numéro existe."
+                                            "example": "Code OTP envoyé par SMS"
                                         }
                                     },
                                     "type": "object"
@@ -62,7 +60,7 @@
                         }
                     },
                     "400": {
-                        "description": "Erreur",
+                        "description": "Erreur lors de l'envoi du SMS",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -74,25 +72,31 @@
                 }
             }
         },
-        "/api/auth/echange": {
+        "/api/auth/verify-otp": {
             "post": {
                 "tags": [
                     "Authentification"
                 ],
-                "summary": "Échanger un code d'authentification contre un token et données utilisateur",
-                "operationId": "22835a2c8a60e3ad7704be14dfea6136",
+                "summary": "Vérifier le code OTP et obtenir un token d'accès",
+                "operationId": "verifyOtp",
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "temp_token"
+                                    "phone",
+                                    "otp"
                                 ],
                                 "properties": {
-                                    "temp_token": {
+                                    "phone": {
                                         "type": "string",
-                                        "example": "abc123..."
+                                        "example": "771234567"
+                                    },
+                                    "otp": {
+                                        "type": "string",
+                                        "example": "1234",
+                                        "description": "Code OTP à 4 chiffres"
                                     }
                                 },
                                 "type": "object"
@@ -102,7 +106,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Authentification réussie avec données complètes",
+                        "description": "Authentification réussie",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -119,35 +123,6 @@
                                                 "token_type": {
                                                     "type": "string",
                                                     "example": "Bearer"
-                                                },
-                                                "user": {
-                                                    "properties": {
-                                                        "id": {
-                                                            "type": "integer"
-                                                        },
-                                                        "phone": {
-                                                            "type": "string"
-                                                        },
-                                                        "name": {
-                                                            "type": "string"
-                                                        },
-                                                        "is_phone_verified": {
-                                                            "type": "boolean"
-                                                        },
-                                                        "compte": {
-                                                            "$ref": "#/components/schemas/Compte"
-                                                        },
-                                                        "qr_code": {
-                                                            "$ref": "#/components/schemas/QrCode"
-                                                        },
-                                                        "recent_transactions": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "$ref": "#/components/schemas/Transaction"
-                                                            }
-                                                        }
-                                                    },
-                                                    "type": "object"
                                                 }
                                             },
                                             "type": "object"
@@ -163,7 +138,7 @@
                         }
                     },
                     "400": {
-                        "description": "Code invalide",
+                        "description": "Code OTP invalide",
                         "content": {
                             "application/json": {
                                 "schema": {
