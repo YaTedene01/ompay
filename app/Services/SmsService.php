@@ -27,22 +27,50 @@ class SmsService
     public function sendSms(string $to, string $message): bool
     {
         try {
+            // Vérifier la configuration Twilio
+            $sid = config('services.twilio.sid');
+            $token = config('services.twilio.token');
+            $from = config('services.twilio.from');
+
+            Log::info('Configuration Twilio', [
+                'sid_exists' => !empty($sid),
+                'token_exists' => !empty($token),
+                'from_exists' => !empty($from),
+                'sid_prefix' => substr($sid, 0, 5) . '...',
+                'from' => $from
+            ]);
+
+            if (!$sid || !$token || !$from) {
+                Log::error('Configuration Twilio manquante', [
+                    'sid' => $sid ? 'présent' : 'manquant',
+                    'token' => $token ? 'présent' : 'manquant',
+                    'from' => $from ? 'présent' : 'manquant'
+                ]);
+                return false;
+            }
+
             // S'assurer que le numéro commence par +
             if (!str_starts_with($to, '+')) {
                 $to = '+' . $to;
             }
 
-            $this->twilio->messages->create(
+            Log::info('Tentative d\'envoi SMS', [
+                'to' => $to,
+                'message_length' => strlen($message)
+            ]);
+
+            $result = $this->twilio->messages->create(
                 $to,
                 [
-                    'from' => config('services.twilio.from'),
+                    'from' => $from,
                     'body' => $message
                 ]
             );
 
             Log::info('SMS envoyé avec succès', [
                 'to' => $to,
-                'message' => substr($message, 0, 50) . '...'
+                'message_id' => $result->sid ?? 'unknown',
+                'status' => $result->status ?? 'unknown'
             ]);
 
             return true;
@@ -50,7 +78,10 @@ class SmsService
         } catch (\Exception $e) {
             Log::error('Erreur lors de l\'envoi du SMS', [
                 'to' => $to,
-                'error' => $e->getMessage()
+                'error_message' => $e->getMessage(),
+                'error_code' => $e->getCode(),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine()
             ]);
 
             return false;

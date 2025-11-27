@@ -108,7 +108,9 @@ class AuthController extends Controller
 
         $smsSent = $smsService->sendSms($data['phone'], $message);
         if (!$smsSent) {
-            return $this->error('Erreur lors de l\'envoi du SMS', 500);
+            return $this->error('Erreur lors de l\'envoi du SMS', 500, [
+                'details' => 'Vérifiez la configuration Twilio et les logs pour plus d\'informations'
+            ]);
         }
 
         return $this->success(null, 'Code OTP envoyé par SMS');
@@ -122,9 +124,8 @@ class AuthController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"phone", "otp"},
-     *             @OA\Property(property="phone", type="string", example="771234567"),
-     *             @OA\Property(property="otp", type="string", example="1234")
+     *             required={"otp"},
+     *             @OA\Property(property="otp", type="string", example="1234", description="Code OTP à 4 chiffres")
      *         )
      *     ),
      *     @OA\Response(
@@ -157,12 +158,10 @@ class AuthController extends Controller
     public function verifyOtp(Request $request)
     {
         $data = $request->validate([
-            'phone' => ['required', 'string'],
             'otp' => ['required', 'string', 'size:4', 'regex:/^\d{4}$/']
         ]);
 
-        $link = AuthLink::where('phone', $data['phone'])
-            ->where('token', $data['otp'])
+        $link = AuthLink::where('token', $data['otp'])
             ->where('data->type', 'otp')
             ->first();
 

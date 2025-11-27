@@ -82,15 +82,11 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "phone",
                                     "otp"
                                 ],
                                 "properties": {
-                                    "phone": {
-                                        "type": "string",
-                                        "example": "771234567"
-                                    },
                                     "otp": {
+                                        "description": "Code OTP à 4 chiffres",
                                         "type": "string",
                                         "example": "1234"
                                     }
