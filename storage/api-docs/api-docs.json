@@ -12,13 +12,13 @@
         }
     ],
     "paths": {
-        "/api/auth/envoyer-lien": {
+        "/api/auth/send-otp": {
             "post": {
                 "tags": [
                     "Authentification"
                 ],
-                "summary": "Envoyer un lien d'authentification",
-                "operationId": "17f81560c708ec96b34131e426c01f56",
+                "summary": "Envoyer un code OTP d'authentification",
+                "operationId": "bffceebe22269794653d542fb5e548dd",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -37,7 +37,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Token généré pour les tests",
+                        "description": "OTP envoyé par SMS",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -46,26 +46,9 @@
                                             "type": "boolean",
                                             "example": true
                                         },
-                                        "data": {
-                                            "properties": {
-                                                "token": {
-                                                    "type": "string",
-                                                    "example": "abc123def456..."
-                                                },
-                                                "expires_in": {
-                                                    "type": "integer",
-                                                    "example": 600
-                                                },
-                                                "message": {
-                                                    "type": "string",
-                                                    "example": "Utilisez ce token pour vous connecter"
-                                                }
-                                            },
-                                            "type": "object"
-                                        },
                                         "message": {
                                             "type": "string",
-                                            "example": "Token généré pour les tests."
+                                            "example": "Code OTP envoyé par SMS"
                                         }
                                     },
                                     "type": "object"
@@ -86,25 +69,30 @@
                 }
             }
         },
-        "/api/auth/echange": {
+        "/api/auth/verify-otp": {
             "post": {
                 "tags": [
                     "Authentification"
                 ],
-                "summary": "Échanger un code d'authentification contre un token d'accès",
-                "operationId": "22835a2c8a60e3ad7704be14dfea6136",
+                "summary": "Vérifier le code OTP et obtenir un token d'accès",
+                "operationId": "abcb5741589707b15c7ecac7a67c13aa",
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "temp_token"
+                                    "phone",
+                                    "otp"
                                 ],
                                 "properties": {
-                                    "temp_token": {
+                                    "phone": {
                                         "type": "string",
-                                        "example": "abc123..."
+                                        "example": "771234567"
+                                    },
+                                    "otp": {
+                                        "type": "string",
+                                        "example": "1234"
                                     }
                                 },
                                 "type": "object"
@@ -146,7 +134,7 @@
                         }
                     },
                     "400": {
-                        "description": "Code invalide",
+                        "description": "Code OTP invalide",
                         "content": {
                             "application/json": {
                                 "schema": {
