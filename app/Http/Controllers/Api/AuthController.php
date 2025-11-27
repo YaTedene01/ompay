@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Jobs\SendAuthLinkJob;
 use App\Models\AuthLink;
 use App\Models\User;
+use App\Services\SmsService;
 use App\Services\UserService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
@@ -60,8 +61,8 @@ class AuthController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/auth/envoyer-lien",
-     *     summary="Envoyer un lien d'authentification",
+     *     path="/api/auth/send-otp",
+     *     summary="Envoyer un code OTP d'authentification",
      *     tags={"Authentification"},
      *     @OA\RequestBody(
      *         required=true,
@@ -71,15 +72,10 @@ class AuthController extends Controller
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Token généré pour les tests",
+     *         description="OTP envoyé par SMS",
      *         @OA\JsonContent(
      *             @OA\Property(property="status", type="boolean", example=true),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="token", type="string", example="abc123def456..."),
-     *                 @OA\Property(property="expires_in", type="integer", example=600),
-     *                 @OA\Property(property="message", type="string", example="Utilisez ce token pour vous connecter")
-     *             ),
-     *             @OA\Property(property="message", type="string", example="Token généré pour les tests.")
+     *             @OA\Property(property="message", type="string", example="Code OTP envoyé par SMS")
      *         )
      *     ),
      *     @OA\Response(
@@ -89,42 +85,46 @@ class AuthController extends Controller
      *     )
      * )
      */
-    public function sendLink(Request $request)
+    public function sendOtp(Request $request)
     {
         $data = $request->validate([
             'phone' => ['required', 'string'],
         ]);
 
-        $token = Str::random(48);
-        $expires = Carbon::now()->addMinutes((int) env('AUTH_LINK_EXPIRES', 10));
+        // Générer un code OTP de 4 chiffres
+        $otp = str_pad(mt_rand(0, 9999), 4, '0', STR_PAD_LEFT);
+        $expires = Carbon::now()->addMinutes((int) env('OTP_EXPIRES', 5));
 
         $link = AuthLink::create([
             'phone' => $data['phone'],
-            'token' => $token,
-            'data' => ['redirect' => env('APP_URL')],
+            'token' => $otp,
+            'data' => ['type' => 'otp'],
             'expires_at' => $expires,
         ]);
 
-        // Temporairement désactivé l'envoi SMS pour les tests
-        // dispatch(new SendAuthLinkJob($link));
+        // Envoyer le SMS avec l'OTP
+        $smsService = app(SmsService::class);
+        $message = "OMPAY - Votre code de connexion : {$otp}\n\nCe code expire dans 5 minutes.";
 
-        return $this->success([
-            'token' => $token,
-            'expires_in' => (int) env('AUTH_LINK_EXPIRES', 10) * 60, // en secondes
-            'message' => 'Utilisez ce token pour vous connecter'
-        ], 'Token généré pour les tests.');
+        $smsSent = $smsService->sendSms($data['phone'], $message);
+        if (!$smsSent) {
+            return $this->error('Erreur lors de l\'envoi du SMS', 500);
+        }
+
+        return $this->success(null, 'Code OTP envoyé par SMS');
     }
 
     /**
      * @OA\Post(
-     *     path="/api/auth/echange",
-     *     summary="Échanger un code d'authentification contre un token d'accès",
+     *     path="/api/auth/verify-otp",
+     *     summary="Vérifier le code OTP et obtenir un token d'accès",
      *     tags={"Authentification"},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"temp_token"},
-     *             @OA\Property(property="temp_token", type="string", example="abc123...")
+     *             required={"phone", "otp"},
+     *             @OA\Property(property="phone", type="string", example="771234567"),
+     *             @OA\Property(property="otp", type="string", example="1234")
      *         )
      *     ),
      *     @OA\Response(
@@ -141,7 +141,7 @@ class AuthController extends Controller
      *     ),
      *     @OA\Response(
      *         response=400,
-     *         description="Code invalide",
+     *         description="Code OTP invalide",
      *         @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
      *     ),
      *     @OA\Response(
@@ -154,19 +154,26 @@ class AuthController extends Controller
      *     )
      * )
      */
-    public function echange(Request $request)
+    public function verifyOtp(Request $request)
     {
-        $data = $request->validate(['temp_token' => ['required', 'string']]);
+        $data = $request->validate([
+            'phone' => ['required', 'string'],
+            'otp' => ['required', 'string', 'size:4', 'regex:/^\d{4}$/']
+        ]);
 
-    $link = AuthLink::where('token', $data['temp_token'])->first();
+        $link = AuthLink::where('phone', $data['phone'])
+            ->where('token', $data['otp'])
+            ->where('data->type', 'otp')
+            ->first();
+
         if (! $link) {
-            return $this->error('Token invalide', 404);
+            return $this->error('Code OTP invalide', 400);
         }
         if ($link->used_at) {
-            return $this->error('Ce lien a déjà été utilisé', 400);
+            return $this->error('Ce code OTP a déjà été utilisé', 400);
         }
         if (Carbon::now()->greaterThan($link->expires_at)) {
-            return $this->error('Le lien a expiré', 400);
+            return $this->error('Le code OTP a expiré', 400);
         }
 
         $user = $this->userService->createUserForPhone($link->phone);
@@ -174,7 +181,7 @@ class AuthController extends Controller
         // Marque le téléphone comme vérifié
         $this->userService->verifyPhone($user);
 
-        // Ensure compte exists 
+        // Ensure compte exists
         $user->load('compte');
         if (! $user->compte) {
             $user->compte()->create(['solde' => 500]);

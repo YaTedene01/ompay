@@ -18,8 +18,8 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\QrController;
 
-Route::post('auth/envoyer-lien', [AuthController::class, 'sendLink']);
-Route::post('auth/echange', [AuthController::class, 'echange']);
+Route::post('auth/send-otp', [AuthController::class, 'sendOtp']);
+Route::post('auth/verify-otp', [AuthController::class, 'verifyOtp']);
 
 Route::middleware('auth:api')->group(function () {
     Route::get('user', function (Request $request) { return $request->user(); });
